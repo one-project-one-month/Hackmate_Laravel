@@ -22,6 +22,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'preferred_role',
+        'bio',
+        'github_username',
+        'github_id',
+        'has_profile_setup',
     ];
 
     /**
@@ -30,8 +35,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password'
     ];
 
     /**
@@ -44,6 +48,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'has_profile_setup' => 'boolean',
         ];
     }
 

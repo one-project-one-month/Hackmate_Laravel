@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->nullable();
             $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password')->nullable();
             $table->string('github_username')->nullable();
             $table->unsignedBigInteger('github_id')->nullable()->unique();
             $table->text('bio')->nullable();
+            $table->string('preferred_role')->nullable();
+            $table->boolean('has_profile_setup')->default(false);
             $table->timestamps();
         });
     }
