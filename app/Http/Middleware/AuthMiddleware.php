@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class auth
+class AuthMiddleware
 {
     /**
      * Handle an incoming request.

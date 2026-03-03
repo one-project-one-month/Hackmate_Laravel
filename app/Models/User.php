@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\TechStack;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -27,6 +28,9 @@ class User extends Authenticatable
         'github_username',
         'github_id',
         'has_profile_setup',
+        'github_id',
+        'github_username',
+        'bio',
     ];
 
     /**
@@ -37,6 +41,16 @@ class User extends Authenticatable
     protected $hidden = [
         'password'
     ];
+    
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
 
     /**
      * Get the attributes that should be cast.
