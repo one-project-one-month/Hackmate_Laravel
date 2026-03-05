@@ -16,6 +16,13 @@ class GithubSocialLoginController extends Controller
         return response()->json(['url' => $url]);
     }
 
+    /**
+     * Updated to include user's id and user's has_profile_setup flag 
+     * for redirection to the profile setup page.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
     public function callback(Request $request)
     {
         try {
@@ -68,6 +75,10 @@ class GithubSocialLoginController extends Controller
             ], 500);
         }
 
-        return redirect()->away($frontendCallback . '?token=' . $token);
+        return redirect()->away($frontendCallback . '?' . http_build_query([
+            'token' => $token,
+            'user_id' => $user->id,
+            'has_profile_setup' => $user->has_profile_setup,
+        ]));
     }
 }

@@ -56,7 +56,8 @@ class AuthController extends Controller
     }
 
     /**
-     * Get the token array structure.
+     * Get the token array structure. Updated to include user_id and has_profile_setup 
+     * for redirection to the profile setup page.
      *
      * @param  string $token
      *
@@ -64,10 +65,16 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $user = auth('api')->user();
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL()
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'user' => [
+                'id' => $user->id,
+                'has_profile_setup' => $user->has_profile_setup,
+            ],
         ]);
     }
 }
