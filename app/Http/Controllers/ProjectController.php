@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Project;
+use Illuminate\Support\Facades\Http;
 
 class ProjectController extends Controller
 {
@@ -24,13 +25,13 @@ class ProjectController extends Controller
 
         // Check if the authenticated user owns this project
         if ($project->created_by_user_id != auth()->id()) {
-        return response()->json([
-            'message' => 'Unauthorized',
-            'debug' => [
-                'project_owner' => $project->created_by_user_id,
-                'logged_in_user' => auth()->id()
-            ]
-        ], 403);
+            return response()->json([
+                'message' => 'Unauthorized',
+                'debug' => [
+                    'project_owner' => $project->created_by_user_id,
+                    'logged_in_user' => auth()->id()
+                ]
+            ], 403);
         }
 
         // Validate incoming data
@@ -46,6 +47,43 @@ class ProjectController extends Controller
         $project->update($validatedData);
 
         return response()->json($project);
+    }
+
+    public function store(Request $request)
+    {
+
+        // Validate incoming data
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+        $githubToken = $user->github_token;
+
+        $response = Http::withToken($githubToken)
+            ->withHeaders([
+                'Accept' => 'application/vnd.github+json',
+                'X-GitHub-Api-Version' => '2022-11-28',
+            ])
+            ->post('https://api.github.com/user/repos', [
+                'name' => $validatedData['title'],
+                'description' => $validatedData['description'],
+                'private' => true,
+            ]);
+
+        $project = Project::create([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+            'created_by_user_id' => auth()->id(),
+            'github_repo' => $response->json('html_url'),
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Project created',
+            'data' => $project
+        ], 201);
     }
 
 }
