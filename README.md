@@ -30,10 +30,13 @@ Set these values:
 - `GITHUB_OAUTH_CLIENT_SECRET`
 - `GITHUB_OAUTH_REDIRECT_URI=http://localhost:8000/api/v1/github/callback`
 - `FRONTEND_GITHUB_CALLBACK_URL=http://localhost:5173/auth/github/callback`
-- `PASSPORT_PASSWORD_CLIENT_ID`
-- `PASSPORT_PASSWORD_CLIENT_SECRET`
-- `PASSPORT_AUTH_CODE_CLIENT_ID`
-- `PASSPORT_AUTH_CODE_CLIENT_SECRET`
+- `JWT_SECRET`
+
+Generate `JWT_SECRET` (once per environment):
+
+```bash
+php artisan jwt:secret
+```
 
 ### 2. Email/password login
 
@@ -46,7 +49,7 @@ Set these values:
 }
 ```
 
-Returns Passport token payload (`access_token`, `refresh_token`, `expires_in`).
+Returns JWT token payload (`access_token`, `token_type`, `expires_in`).
 
 ### 3. GitHub login flow (SPA/mobile)
 
@@ -54,26 +57,13 @@ Returns Passport token payload (`access_token`, `refresh_token`, `expires_in`).
 2. Redirect browser to returned `url`.
 3. GitHub redirects to backend callback.
 4. Backend redirects to:
-   - `FRONTEND_GITHUB_CALLBACK_URL?code=<short_lived_code>`
-5. Frontend calls `POST /api/v1/auth/exchange`:
-
-```json
-{
-  "code": "the_code_from_query_param"
-}
-```
-
-Response is the same Passport token payload as email/password login.
+   - `FRONTEND_GITHUB_CALLBACK_URL?token=<jwt_token>`
 
 ### 4. Refresh token
 
-`POST /api/v1/auth/refresh`
+`POST /api/v1/auth/refresh` with header:
 
-```json
-{
-  "refresh_token": "<refresh_token>"
-}
-```
+`Authorization: Bearer <access_token>`
 
 ### 5. Current user profile
 
