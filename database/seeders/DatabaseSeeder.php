@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             LoginTestUserSeeder::class,
+            ProjectSeeder::class,       //  run project seeder
         ]);
     }
 }
