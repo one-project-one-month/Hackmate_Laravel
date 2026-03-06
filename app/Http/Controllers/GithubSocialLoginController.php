@@ -12,7 +12,11 @@ class GithubSocialLoginController extends Controller
 {
     public function getLoginUrl(Request $request)
     {
-        $url = Socialite::driver('github')->stateless()->redirect()->getTargetUrl();
+        $url = Socialite::driver('github')
+            ->stateless()
+            ->scopes(['repo'])
+            ->redirect()
+            ->getTargetUrl();
         return response()->json(['url' => $url]);
     }
 
