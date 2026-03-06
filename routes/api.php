@@ -33,5 +33,6 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:api')->group(function () {
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
+        Route::put('/users/self-profile', [UserController::class, 'updateSelfUserInfo']);
 }); 
 });
