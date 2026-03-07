@@ -4,13 +4,14 @@ namespace App\Console\Commands;
 
 use App\Models\Feed;
 use App\Models\Project;
+use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Console\Command;
 
 class GenerateProjectRecommendations extends Command
 {
     protected $signature = 'app:generate-project-recommendations';
+
     protected $description = 'Generate project recommendation feed from hidden reaction counters';
 
     public function handle(): int
@@ -24,7 +25,7 @@ class GenerateProjectRecommendations extends Command
         $this->info('Starting feed generation...');
 
         DB::transaction(function () use ($generatedAt, $batchSize, &$insertBuffer, &$rankCounter, &$totalCount) {
-            Feed::truncate(); 
+            Feed::truncate();
 
             $query = Project::query()
                 ->where('is_active', true)
@@ -35,12 +36,12 @@ class GenerateProjectRecommendations extends Command
 
             foreach ($query as $project) {
                 $insertBuffer[] = [
-                    'project_id'   => $project->id,
-                    'score'        => $project->like_count - $project->dislike_count,
-                    'rank'         => $rankCounter++,
+                    'project_id' => $project->id,
+                    'score' => $project->like_count - $project->dislike_count,
+                    'rank' => $rankCounter++,
                     'generated_at' => $generatedAt,
-                    'created_at'   => $generatedAt,
-                    'updated_at'   => $generatedAt,
+                    'created_at' => $generatedAt,
+                    'updated_at' => $generatedAt,
                 ];
 
                 if (count($insertBuffer) >= $batchSize) {
@@ -51,7 +52,7 @@ class GenerateProjectRecommendations extends Command
                 }
             }
 
-            if (!empty($insertBuffer)) {
+            if (! empty($insertBuffer)) {
                 Feed::insert($insertBuffer);
                 $totalCount += count($insertBuffer);
             }
