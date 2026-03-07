@@ -46,6 +46,10 @@ it('requires auth for projects index route', function (): void {
     $this->getJson('/api/v1/projects')->assertStatus(401);
 });
 
+it('requires auth for feed route', function (): void {
+    $this->getJson('/api/v1/feed')->assertStatus(401);
+});
+
 it('returns only active projects for authenticated user', function (): void {
     $owner = User::factory()->create([
         'email' => 'projects@example.com',
@@ -59,6 +63,8 @@ it('returns only active projects for authenticated user', function (): void {
         'created_by_user_id' => $owner->id,
         'github_repo' => 'https://github.com/example/active',
         'is_active' => true,
+        'like_count' => 7,
+        'dislike_count' => 2,
     ]);
 
     Project::query()->create([
@@ -76,6 +82,9 @@ it('returns only active projects for authenticated user', function (): void {
 
     expect($response->json())->toHaveCount(1);
     expect($response->json('0.title'))->toBe('Active Project');
+    $response
+        ->assertJsonMissingPath('0.like_count')
+        ->assertJsonMissingPath('0.dislike_count');
 });
 
 it('forbids project update when user is not owner', function (): void {
@@ -102,6 +111,87 @@ it('forbids project update when user is not owner', function (): void {
         ])
         ->assertStatus(403)
         ->assertJsonPath('message', 'Unauthorized');
+});
+
+it('orders active projects using generated feed ranking', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'ranking@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    Project::query()->create([
+        'title' => 'Top Ranked',
+        'description' => 'High net score',
+        'type' => 'web',
+        'created_by_user_id' => $owner->id,
+        'github_repo' => 'https://github.com/example/top',
+        'is_active' => true,
+        'like_count' => 20,
+        'dislike_count' => 3,
+    ]);
+
+    Project::query()->create([
+        'title' => 'Lower Ranked',
+        'description' => 'Lower net score',
+        'type' => 'web',
+        'created_by_user_id' => $owner->id,
+        'github_repo' => 'https://github.com/example/lower',
+        'is_active' => true,
+        'like_count' => 8,
+        'dislike_count' => 5,
+    ]);
+
+    $this->artisan('app:generate-project-recommendations')->assertExitCode(0);
+
+    $token = loginToken($owner);
+
+    $response = $this->withToken($token)->getJson('/api/v1/projects')->assertOk();
+
+    expect($response->json('0.title'))->toBe('Top Ranked');
+    expect($response->json('1.title'))->toBe('Lower Ranked');
+    $response
+        ->assertJsonMissingPath('0.like_count')
+        ->assertJsonMissingPath('0.dislike_count');
+});
+
+it('returns generated feed ordering from feed route', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'feed@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    Project::query()->create([
+        'title' => 'Feed Top',
+        'description' => 'Higher score',
+        'type' => 'web',
+        'created_by_user_id' => $owner->id,
+        'github_repo' => 'https://github.com/example/feed-top',
+        'is_active' => true,
+        'like_count' => 12,
+        'dislike_count' => 1,
+    ]);
+
+    Project::query()->create([
+        'title' => 'Feed Low',
+        'description' => 'Lower score',
+        'type' => 'web',
+        'created_by_user_id' => $owner->id,
+        'github_repo' => 'https://github.com/example/feed-low',
+        'is_active' => true,
+        'like_count' => 3,
+        'dislike_count' => 1,
+    ]);
+
+    $this->artisan('app:generate-project-recommendations')->assertExitCode(0);
+
+    $token = loginToken($owner);
+    $response = $this->withToken($token)->getJson('/api/v1/feed')->assertOk();
+
+    expect($response->json('0.title'))->toBe('Feed Top');
+    expect($response->json('1.title'))->toBe('Feed Low');
+    $response
+        ->assertJsonMissingPath('0.like_count')
+        ->assertJsonMissingPath('0.dislike_count');
 });
 
 it('updates project when authenticated owner sends valid data', function (): void {

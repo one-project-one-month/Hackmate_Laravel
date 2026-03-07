@@ -33,11 +33,11 @@ Route::prefix('v1')->group(function () {
 
     //Project Routes (Clean URL: /api/v1/projects)
     Route::middleware('auth:api')->group(function () {
+        Route::get('/feed', [ProjectController::class, 'feed']);
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
     });
 });
-
 
 
