@@ -17,6 +17,7 @@ class GithubSocialLoginController extends Controller
             ->scopes(['repo'])
             ->redirect()
             ->getTargetUrl();
+
         return response()->json(['url' => $url]);
     }
 
@@ -32,7 +33,7 @@ class GithubSocialLoginController extends Controller
         }
 
         $githubId = $gh->getId();
-        if (!$githubId) {
+        if (! $githubId) {
             return response()->json([
                 'error' => 'github_profile_incomplete',
                 'message' => 'GitHub did not return a valid account identifier.',
@@ -40,7 +41,7 @@ class GithubSocialLoginController extends Controller
         }
 
         $githubToken = $gh->token;
-        if (!$githubToken) {
+        if (! $githubToken) {
             return response()->json([
                 'error' => 'github_token_missing',
                 'message' => 'GitHub did not return an access token.',
@@ -53,7 +54,7 @@ class GithubSocialLoginController extends Controller
 
         $user = User::where('github_id', $githubId)->first();
 
-        if (!$user) {
+        if (! $user) {
             $email = $githubEmail ?: "github_{$githubId}@users.noreply.local";
 
             $user = User::create([
@@ -75,13 +76,13 @@ class GithubSocialLoginController extends Controller
         $token = auth('api')->login($user);
 
         $frontendCallback = rtrim(env('FRONTEND_GITHUB_CALLBACK_URL', ''), '/');
-        if (!$frontendCallback) {
+        if (! $frontendCallback) {
             return response()->json([
                 'error' => 'frontend_callback_not_configured',
                 'message' => 'Set FRONTEND_GITHUB_CALLBACK_URL in .env.',
             ], 500);
         }
 
-        return redirect()->away($frontendCallback . '?token=' . $token);
+        return redirect()->away($frontendCallback.'?token='.$token);
     }
 }

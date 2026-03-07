@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\TechStack;
+use Illuminate\Database\Seeder;
 
 class TechStackSeeder extends Seeder
 {
@@ -15,7 +14,7 @@ class TechStackSeeder extends Seeder
     {
         $stacks = [
             ['name' => 'PHP', 'category' => 'language'],
-            ['name' => 'JavaScript', 'category' => 'language'],         
+            ['name' => 'JavaScript', 'category' => 'language'],
             ['name' => 'Laravel', 'category' => 'framework'],
             ['name' => 'React', 'category' => 'framework'],
             ['name' => 'Nest', 'category' => 'framework'],

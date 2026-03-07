@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Project;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class ProjectController extends Controller
 {
-    //Get Projects for Swippable Card
+    // Get Projects for Swippable Card
     public function index()
     {
         return $this->feed();
@@ -30,7 +30,7 @@ class ProjectController extends Controller
         return response()->json($projects);
     }
 
-    //update project 
+    // update project
     public function update(Request $request, $id)
     {
         $project = Project::findOrFail($id);
@@ -41,8 +41,8 @@ class ProjectController extends Controller
                 'message' => 'Unauthorized',
                 'debug' => [
                     'project_owner' => $project->created_by_user_id,
-                    'logged_in_user' => auth()->id()
-                ]
+                    'logged_in_user' => auth()->id(),
+                ],
             ], 403);
         }
 
@@ -94,8 +94,7 @@ class ProjectController extends Controller
 
         return response()->json([
             'message' => 'Project created',
-            'data' => $project
+            'data' => $project,
         ], 201);
     }
-
 }
