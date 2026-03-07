@@ -11,8 +11,20 @@ class ProjectController extends Controller
     //Get Projects for Swippable Card
     public function index()
     {
-        // Fetch projects from the database 
-        $projects = Project::with('creator')->where('is_active', true)->get();
+        return $this->feed();
+    }
+
+    public function feed()
+    {
+        // Read recommendation order from the precomputed feed table.
+        $projects = Project::with('creator')
+            ->where('is_active', true)
+            ->leftJoin('feeds', 'projects.id', '=', 'feeds.project_id')
+            ->select('projects.*')
+            ->orderByRaw('CASE WHEN feeds.rank IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('feeds.rank')
+            ->orderByDesc('projects.created_at')
+            ->get();
 
         // Return the projects as JSON
         return response()->json($projects);
