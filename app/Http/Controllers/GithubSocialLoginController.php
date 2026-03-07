@@ -12,7 +12,11 @@ class GithubSocialLoginController extends Controller
 {
     public function getLoginUrl(Request $request)
     {
-        $url = Socialite::driver('github')->stateless()->redirect()->getTargetUrl();
+        $url = Socialite::driver('github')
+            ->stateless()
+            ->scopes(['repo'])
+            ->redirect()
+            ->getTargetUrl();
         return response()->json(['url' => $url]);
     }
 
@@ -35,6 +39,14 @@ class GithubSocialLoginController extends Controller
             ], 422);
         }
 
+        $githubToken = $gh->token;
+        if (!$githubToken) {
+            return response()->json([
+                'error' => 'github_token_missing',
+                'message' => 'GitHub did not return an access token.',
+            ], 422);
+        }
+
         $githubId = (int) $githubId;
         $githubEmail = $gh->getEmail();
         $displayName = $gh->getNickname() ? $gh->getNickname() : 'GitHub User';
@@ -49,11 +61,13 @@ class GithubSocialLoginController extends Controller
                 'email' => $email,
                 'github_id' => $githubId,
                 'github_username' => $displayName,
+                'github_token' => $githubToken,
                 'password' => Str::random(40),
             ]);
         } else {
             $user->fill([
                 'github_username' => $displayName,
+                'github_token' => $githubToken,
             ]);
             $user->save();
         }
