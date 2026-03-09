@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
     public function getUserById(Request $request, $id)
     {
         $user = User::find($id);
-        if(!$user){
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
-                'status' => 404
+                'status' => 404,
             ], 404);
         }
 
@@ -22,10 +22,9 @@ class UserController extends Controller
             'success' => true,
             'message' => 'successful',
             'content' => $user,
-            'status' => 200
+            'status' => 200,
         ]);
     }
 
-    public function updateSelfUserInfo(Request $request)
-    {}
+    public function updateSelfUserInfo(Request $request) {}
 }
