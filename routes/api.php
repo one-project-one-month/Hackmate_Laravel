@@ -34,6 +34,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/feed', [ProjectController::class, 'feed']);
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::get('/projects', [ProjectController::class, 'index']);
+        Route::get('/projects/own', [ProjectController::class, 'own']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
+        Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
     });
 });

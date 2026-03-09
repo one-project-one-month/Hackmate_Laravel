@@ -14,6 +14,16 @@ class ProjectController extends Controller
         return $this->feed();
     }
 
+    public function own()
+    {
+        $projects = Project::query()
+            ->where('created_by_user_id', auth()->id())
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($projects);
+    }
+
     public function feed()
     {
         // Read recommendation order from the precomputed feed table.
@@ -59,6 +69,21 @@ class ProjectController extends Controller
         $project->update($validatedData);
 
         return response()->json($project);
+    }
+
+    public function destroy($id)
+    {
+        $project = Project::findOrFail($id);
+
+        if ($project->created_by_user_id != auth()->id()) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        $project->delete();
+
+        return response()->noContent();
     }
 
     public function store(Request $request)

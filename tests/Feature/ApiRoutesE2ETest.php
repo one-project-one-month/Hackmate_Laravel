@@ -50,6 +50,10 @@ it('requires auth for feed route', function (): void {
     $this->getJson('/api/v1/feed')->assertStatus(401);
 });
 
+it('requires auth for own projects route', function (): void {
+    $this->getJson('/api/v1/projects/own')->assertStatus(401);
+});
+
 it('returns only active projects for authenticated user', function (): void {
     $owner = User::factory()->create([
         'email' => 'projects@example.com',
@@ -87,6 +91,45 @@ it('returns only active projects for authenticated user', function (): void {
         ->assertJsonMissingPath('0.dislike_count');
 });
 
+it('returns only the authenticated users own projects', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'owner-projects@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    $other = User::factory()->create();
+
+    $olderProject = Project::factory()->create([
+        'created_by_user_id' => $owner->id,
+        'title' => 'Older Owned Project',
+        'created_at' => now()->subDay(),
+        'updated_at' => now()->subDay(),
+    ]);
+
+    $newerProject = Project::factory()->create([
+        'created_by_user_id' => $owner->id,
+        'title' => 'Newer Owned Project',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    Project::factory()->create([
+        'created_by_user_id' => $other->id,
+        'title' => 'Someone Else Project',
+    ]);
+
+    $token = loginToken($owner);
+
+    $response = $this->withToken($token)->getJson('/api/v1/projects/own')->assertOk();
+
+    expect($response->json())->toHaveCount(2);
+    expect($response->json('0.id'))->toBe($newerProject->id);
+    expect($response->json('1.id'))->toBe($olderProject->id);
+    $response
+        ->assertJsonMissingPath('0.like_count')
+        ->assertJsonMissingPath('0.dislike_count');
+});
+
 it('forbids project update when user is not owner', function (): void {
     $owner = User::factory()->create();
     $other = User::factory()->create([
@@ -111,6 +154,50 @@ it('forbids project update when user is not owner', function (): void {
         ])
         ->assertStatus(403)
         ->assertJsonPath('message', 'Unauthorized');
+});
+
+it('forbids project deletion when user is not owner', function (): void {
+    $owner = User::factory()->create();
+    $other = User::factory()->create([
+        'email' => 'delete-other@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    $project = Project::factory()->create([
+        'created_by_user_id' => $owner->id,
+    ]);
+
+    $token = loginToken($other);
+
+    $this->withToken($token)
+        ->deleteJson('/api/v1/projects/'.$project->id)
+        ->assertStatus(403)
+        ->assertJsonPath('message', 'Unauthorized');
+
+    $this->assertDatabaseHas('projects', [
+        'id' => $project->id,
+    ]);
+});
+
+it('deletes a project when requested by the owner', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'delete-owner@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    $project = Project::factory()->create([
+        'created_by_user_id' => $owner->id,
+    ]);
+
+    $token = loginToken($owner);
+
+    $this->withToken($token)
+        ->deleteJson('/api/v1/projects/'.$project->id)
+        ->assertNoContent();
+
+    $this->assertDatabaseMissing('projects', [
+        'id' => $project->id,
+    ]);
 });
 
 it('orders active projects using generated feed ranking', function (): void {
