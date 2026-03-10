@@ -28,6 +28,7 @@ class User extends Authenticatable implements JWTSubject
         'bio',
         'github_username',
         'github_id',
+        'github_token',
         'has_profile_setup',
     ];
 
@@ -37,9 +38,9 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $hidden = [
-        'password'
+        'password',
     ];
-    
+
     public function getJWTIdentifier()
     {
         return $this->getKey();

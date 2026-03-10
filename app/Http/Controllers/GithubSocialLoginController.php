@@ -12,7 +12,12 @@ class GithubSocialLoginController extends Controller
 {
     public function getLoginUrl(Request $request)
     {
-        $url = Socialite::driver('github')->stateless()->redirect()->getTargetUrl();
+        $url = Socialite::driver('github')
+            ->stateless()
+            ->scopes(['repo'])
+            ->redirect()
+            ->getTargetUrl();
+
         return response()->json(['url' => $url]);
     }
 
@@ -28,10 +33,18 @@ class GithubSocialLoginController extends Controller
         }
 
         $githubId = $gh->getId();
-        if (!$githubId) {
+        if (! $githubId) {
             return response()->json([
                 'error' => 'github_profile_incomplete',
                 'message' => 'GitHub did not return a valid account identifier.',
+            ], 422);
+        }
+
+        $githubToken = $gh->token;
+        if (! $githubToken) {
+            return response()->json([
+                'error' => 'github_token_missing',
+                'message' => 'GitHub did not return an access token.',
             ], 422);
         }
 
@@ -41,7 +54,7 @@ class GithubSocialLoginController extends Controller
 
         $user = User::where('github_id', $githubId)->first();
 
-        if (!$user) {
+        if (! $user) {
             $email = $githubEmail ?: "github_{$githubId}@users.noreply.local";
 
             $user = User::create([
@@ -49,11 +62,13 @@ class GithubSocialLoginController extends Controller
                 'email' => $email,
                 'github_id' => $githubId,
                 'github_username' => $displayName,
+                'github_token' => $githubToken,
                 'password' => Str::random(40),
             ]);
         } else {
             $user->fill([
                 'github_username' => $displayName,
+                'github_token' => $githubToken,
             ]);
             $user->save();
         }
@@ -61,13 +76,13 @@ class GithubSocialLoginController extends Controller
         $token = auth('api')->login($user);
 
         $frontendCallback = rtrim(env('FRONTEND_GITHUB_CALLBACK_URL', ''), '/');
-        if (!$frontendCallback) {
+        if (! $frontendCallback) {
             return response()->json([
                 'error' => 'frontend_callback_not_configured',
                 'message' => 'Set FRONTEND_GITHUB_CALLBACK_URL in .env.',
             ], 500);
         }
 
-        return redirect()->away($frontendCallback . '?token=' . $token);
+        return redirect()->away($frontendCallback.'?token='.$token);
     }
 }
