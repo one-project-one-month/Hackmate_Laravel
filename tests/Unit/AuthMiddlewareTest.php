@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Middleware\AuthMiddleware;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\JsonResponse;
 
 it('returns 401 when api guard is not authenticated', function (): void {
     $guard = Mockery::mock();
@@ -11,7 +11,7 @@ it('returns 401 when api guard is not authenticated', function (): void {
 
     Auth::shouldReceive('guard')->once()->with('api')->andReturn($guard);
 
-    $middleware = new AuthMiddleware();
+    $middleware = new AuthMiddleware;
     $request = Request::create('/test', 'GET');
 
     $response = $middleware->handle($request, fn () => new JsonResponse(['ok' => true]));
@@ -26,7 +26,7 @@ it('allows request when api guard is authenticated', function (): void {
 
     Auth::shouldReceive('guard')->once()->with('api')->andReturn($guard);
 
-    $middleware = new AuthMiddleware();
+    $middleware = new AuthMiddleware;
     $request = Request::create('/test', 'GET');
 
     $response = $middleware->handle($request, fn () => new JsonResponse(['ok' => true]));

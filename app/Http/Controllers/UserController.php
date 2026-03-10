@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -32,16 +31,16 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:100',
-            'preferred_role' => 'nullable|string|max:100', 
+            'preferred_role' => 'nullable|string|max:100',
             'bio' => 'nullable|string|max:500',
             'github_username' => 'nullable|string|max:100',
-            'tech_stacks' => 'nullable|array', 
-            'tech_stacks.*' => 'exists:tech_stacks,id'
+            'tech_stacks' => 'nullable|array',
+            'tech_stacks.*' => 'exists:tech_stacks,id',
         ]);
 
         $user->update([
             'name' => $request->name ?? $user->name,
-            'preferred_role' => $request->preferred_role ?? $user->preferred_role, 
+            'preferred_role' => $request->preferred_role ?? $user->preferred_role,
             'bio' => $request->bio,
             'github_username' => $request->github_username,
         ]);
@@ -54,7 +53,7 @@ class UserController extends Controller
             'success' => true,
             'message' => 'Profile updated successfully',
             'content' => $user->load('techStacks'),
-            'status' => 200
+            'status' => 200,
         ]);
     }
 }

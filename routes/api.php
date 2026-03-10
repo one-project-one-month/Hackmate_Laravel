@@ -15,7 +15,7 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/github/login-url', [GithubSocialLoginController::class, 'getLoginUrl']);
     Route::get('/github/callback', [GithubSocialLoginController::class, 'callback']);
-    
+
     Route::get('/users/{id}', [UserController::class, 'getUserById']);
 
     Route::prefix('auth')->group(function () {
