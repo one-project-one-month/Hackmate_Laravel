@@ -26,6 +26,9 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('user')->group(function () {
         Route::get('/{id}', [UserController::class, 'getUserById']);
+        Route::middleware('auth:api')->group(function () {
+            Route::put('/self-profile', [UserController::class, 'updateSelfUserInfo']);
+        });
     });
 
 }); 
