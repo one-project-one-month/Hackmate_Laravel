@@ -14,8 +14,7 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/github/login-url', [GithubSocialLoginController::class, 'getLoginUrl']);
     Route::get('/github/callback', [GithubSocialLoginController::class, 'callback']);
-    Route::get('/users/{id}', [UserController::class, 'getUserById']);
-
+    
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
         Route::middleware('auth:api')->group(function () {
@@ -24,4 +23,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
         });
     });
-});
+
+    Route::prefix('user')->group(function () {
+        Route::get('/{id}', [UserController::class, 'getUserById']);
+    });
+
+}); 
