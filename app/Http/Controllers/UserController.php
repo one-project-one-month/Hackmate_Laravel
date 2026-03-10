@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -27,7 +28,7 @@ class UserController extends Controller
 
     public function updateSelfUserInfo(Request $request)
     {
-        $user = auth()->user();
+        $user = auth('api')->user();
 
         $request->validate([
             'name' => 'required|string|max:100',

@@ -17,7 +17,7 @@ class ProjectController extends Controller
     public function own()
     {
         $projects = Project::query()
-            ->where('created_by_user_id', auth()->id())
+            ->where('created_by_user_id', auth('api')->id())
             ->orderByDesc('created_at')
             ->get();
 
@@ -46,12 +46,12 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
 
         // Check if the authenticated user owns this project
-        if ($project->created_by_user_id != auth()->id()) {
+        if ($project->created_by_user_id != auth('api')->id()) {
             return response()->json([
                 'message' => 'Unauthorized',
                 'debug' => [
                     'project_owner' => $project->created_by_user_id,
-                    'logged_in_user' => auth()->id(),
+                    'logged_in_user' => auth('api')->id(),
                 ],
             ], 403);
         }
@@ -75,7 +75,7 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
 
-        if ($project->created_by_user_id != auth()->id()) {
+        if ($project->created_by_user_id != auth('api')->id()) {
             return response()->json([
                 'message' => 'Unauthorized',
             ], 403);
@@ -95,7 +95,7 @@ class ProjectController extends Controller
             'description' => 'required|string',
         ]);
 
-        $user = auth()->user();
+        $user = auth('api')->user();
         $githubToken = $user->github_token;
 
         $response = Http::withToken($githubToken)
@@ -112,7 +112,7 @@ class ProjectController extends Controller
         $project = Project::create([
             'title' => $validatedData['title'],
             'description' => $validatedData['description'],
-            'created_by_user_id' => auth()->id(),
+            'created_by_user_id' => auth('api')->id(),
             'github_repo' => $response->json('html_url'),
             'is_active' => true,
         ]);
