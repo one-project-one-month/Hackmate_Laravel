@@ -27,6 +27,18 @@ docker compose up -d db
 php artisan migrate
 ```
 
+If you want to run the API via Docker too (pass env vars to compose):
+
+```bash
+export APP_KEY='base64:...'
+export JWT_SECRET='...'
+export GITHUB_OAUTH_CLIENT_ID='...'
+export GITHUB_OAUTH_CLIENT_SECRET='...'
+
+docker compose up -d --build
+docker compose exec api php artisan migrate --seed
+```
+
 ## Environment Variables
 
 Set at minimum:
