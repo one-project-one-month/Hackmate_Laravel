@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TechStackSeeder::class,
-            LoginTestUserSeeder::class
+            LoginTestUserSeeder::class,
         ]);
     }
 }
