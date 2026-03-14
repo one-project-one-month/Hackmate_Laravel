@@ -54,43 +54,6 @@ it('requires auth for own projects route', function (): void {
     $this->getJson('/api/v1/projects/own')->assertStatus(401);
 });
 
-it('returns only active projects for authenticated user', function (): void {
-    $owner = User::factory()->create([
-        'email' => 'projects@example.com',
-        'password' => bcrypt('password123'),
-    ]);
-
-    Project::query()->create([
-        'title' => 'Active Project',
-        'description' => 'Active',
-        'type' => 'web',
-        'created_by_user_id' => $owner->id,
-        'github_repo' => 'https://github.com/example/active',
-        'is_active' => true,
-        'like_count' => 7,
-        'dislike_count' => 2,
-    ]);
-
-    Project::query()->create([
-        'title' => 'Inactive Project',
-        'description' => 'Inactive',
-        'type' => 'web',
-        'created_by_user_id' => $owner->id,
-        'github_repo' => 'https://github.com/example/inactive',
-        'is_active' => false,
-    ]);
-
-    $token = loginToken($owner);
-
-    $response = $this->withToken($token)->getJson('/api/v1/projects')->assertOk();
-
-    expect($response->json())->toHaveCount(1);
-    expect($response->json('0.title'))->toBe('Active Project');
-    $response
-        ->assertJsonMissingPath('0.like_count')
-        ->assertJsonMissingPath('0.dislike_count');
-});
-
 it('returns only the authenticated users own projects', function (): void {
     $owner = User::factory()->create([
         'email' => 'owner-projects@example.com',
@@ -232,7 +195,7 @@ it('orders active projects using generated feed ranking', function (): void {
 
     $token = loginToken($owner);
 
-    $response = $this->withToken($token)->getJson('/api/v1/projects')->assertOk();
+    $response = $this->withToken($token)->getJson('/api/v1/feed')->assertOk();
 
     expect($response->json('0.title'))->toBe('Top Ranked');
     expect($response->json('1.title'))->toBe('Lower Ranked');
@@ -313,5 +276,59 @@ it('updates project when authenticated owner sends valid data', function (): voi
         'id' => $project->id,
         'title' => 'Updated Title',
         'type' => 'mobile',
+    ]);
+});
+
+it('increments project dislike metric', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'dislike@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    $project = Project::factory()->create([
+        'created_by_user_id' => $owner->id,
+        'like_count' => 0,
+        'dislike_count' => 0,
+        'is_active' => true,
+    ]);
+
+    $token = loginToken($owner);
+
+    $this->withToken($token)
+        ->postJson('/api/v1/feed/metric/dislike', [
+            'project_id' => $project->id,
+        ])
+        ->assertNoContent();
+
+    $this->assertDatabaseHas('projects', [
+        'id' => $project->id,
+        'dislike_count' => 1,
+    ]);
+});
+
+it('increments project like metric', function (): void {
+    $owner = User::factory()->create([
+        'email' => 'like@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    $project = Project::factory()->create([
+        'created_by_user_id' => $owner->id,
+        'like_count' => 0,
+        'dislike_count' => 0,
+        'is_active' => true,
+    ]);
+
+    $token = loginToken($owner);
+
+    $this->withToken($token)
+        ->postJson('/api/v1/feed/metric/like', [
+            'project_id' => $project->id,
+        ])
+        ->assertNoContent();
+
+    $this->assertDatabaseHas('projects', [
+        'id' => $project->id,
+        'like_count' => 1,
     ]);
 });

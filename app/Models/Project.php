@@ -35,11 +35,30 @@ class Project extends Model
 
     public function requiredRoles(): BelongsToMany
     {
-        return $this->belongsToMany(ProjectRole::class, 'project_required_roles', 'project_id', 'role_id');
+        return $this->belongsToMany(
+            ProjectRole::class,
+            'project_required_roles',
+            'project_id',
+            'role_id'
+        );
     }
 
     public function feed(): HasOne
     {
-        return $this->hasOne(Feed::class);
+        return $this->hasOne(Feed::class, 'project_id');
+    }
+
+    public function like()
+    {
+        $this->increment('like_count');
+
+        return $this->like_count;
+    }
+
+    public function dislike()
+    {
+        $this->increment('dislike_count');
+
+        return $this->dislike_count;
     }
 }

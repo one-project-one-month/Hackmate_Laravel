@@ -17,12 +17,9 @@ class Feed extends Model
         'generated_at',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'generated_at' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'generated_at' => 'datetime',
+    ];
 
     public function project(): BelongsTo
     {

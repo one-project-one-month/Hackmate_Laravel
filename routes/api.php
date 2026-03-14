@@ -1,13 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\GithubSocialLoginController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:api');
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -15,7 +13,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/github/login-url', [GithubSocialLoginController::class, 'getLoginUrl']);
     Route::get('/github/callback', [GithubSocialLoginController::class, 'callback']);
     Route::get('/users/{id}', [UserController::class, 'getUserById']);
-    Route::get('/projects', [ProjectController::class, 'index']);
 
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
@@ -25,17 +22,25 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
             Route::post('/refresh', [AuthController::class, 'refresh']);
             Route::post('/logout', [AuthController::class, 'logout']);
-
         });
     });
 
-    // Project Routes (Clean URL: /api/v1/projects)
     Route::middleware('auth:api')->group(function () {
-        Route::get('/feed', [ProjectController::class, 'feed']);
+
+        Route::get('/feed', [FeedController::class, 'feed']);
+        Route::post('/feed/metric/like', [FeedController::class, 'metricLike']);
+        Route::post('/feed/metric/dislike', [FeedController::class, 'metricDislike']);
+
         Route::post('/projects', [ProjectController::class, 'store']);
-        Route::get('/projects', [ProjectController::class, 'index']);
         Route::get('/projects/own', [ProjectController::class, 'own']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+
+        // Replace index with FeedController delegation
+        Route::get('/projects', [ProjectController::class, 'index']);
+
+        Route::post('/join-requests/{id}/approve', [RequestController::class, 'approve']);
+        Route::post('/join-requests/{id}/disapprove', [RequestController::class, 'disapprove']);
+        Route::get('/projects/{projectId}/join-requests', [RequestController::class, 'list']);
     });
 });
