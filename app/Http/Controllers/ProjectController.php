@@ -24,6 +24,7 @@ class ProjectController extends Controller
         $data['created_by_user_id'] = $user->id;
         $data['is_active'] = true;
         $project = Project::create($data);
+
         return response()->json($project, 201);
     }
 
@@ -35,6 +36,7 @@ class ProjectController extends Controller
         }
 
         $project->update($request->only(['title', 'description', 'type', 'github_repo', 'is_active']));
+
         return response()->json($project);
     }
 
@@ -46,6 +48,7 @@ class ProjectController extends Controller
         }
 
         $project->delete();
+
         return response()->noContent();
     }
 }
