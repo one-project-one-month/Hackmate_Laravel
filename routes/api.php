@@ -12,13 +12,15 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/github/login-url', [GithubSocialLoginController::class, 'getLoginUrl']);
     Route::get('/github/callback', [GithubSocialLoginController::class, 'callback']);
+
     Route::get('/users/{id}', [UserController::class, 'getUserById']);
 
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-        Route::middleware('auth:api')->group(function () {
+
+        Route::middleware(AuthMiddleware::class)->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
             Route::post('/refresh', [AuthController::class, 'refresh']);
             Route::post('/logout', [AuthController::class, 'logout']);
