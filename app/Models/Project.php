@@ -18,6 +18,7 @@ class Project extends Model
         'type',
         'created_by_user_id',
         'github_repo',
+        'image_url',
         'is_active',
         'like_count',
         'dislike_count',
