@@ -19,11 +19,21 @@ class ProjectController extends Controller
 
     public function store(Request $request)
     {
-        $user = $request->user();
-        $data = $request->only(['title', 'description', 'type', 'github_repo']);
-        $data['created_by_user_id'] = $user->id;
-        $data['is_active'] = true;
-        $project = Project::create($data);
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'github_repo' => 'nullable|url',
+            'image_url' => 'nullable|url',
+        ]);
+
+        $project = Project::create([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+            'created_by_user_id' => auth('api')->id(),
+            'github_repo' => $validatedData['github_repo'] ?? null,
+            'image_url' => $validatedData['image_url'] ?? null,
+            'is_active' => true,
+        ]);
 
         return response()->json($project, 201);
     }
