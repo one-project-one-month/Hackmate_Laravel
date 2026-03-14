@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GithubSocialLoginController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TechStackController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/github/login-url', [GithubSocialLoginController::class, 'getLoginUrl']);
     Route::get('/github/callback', [GithubSocialLoginController::class, 'callback']);
+    Route::get('/tech-stack', [TechStackController::class, 'index']);
 
     Route::get('/users/{id}', [UserController::class, 'getUserById']);
 
