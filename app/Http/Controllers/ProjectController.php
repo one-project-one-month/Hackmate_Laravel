@@ -9,29 +9,33 @@ class ProjectController extends Controller
 {
     public function own(Request $request)
     {
-        $user = $request->user();
-        $projects = Project::where('created_by_user_id', $user->id)
+        $projects = Project::where('created_by_user_id', $request->user()->id)
             ->orderByDesc('created_at')
-            ->get(['id', 'title', 'description', 'type', 'created_by_user_id', 'github_repo', 'is_active']);
+            ->get([
+                'id',
+                'title',
+                'description',
+                'type',
+                'created_by_user_id',
+                'github_repo',
+                'is_active'
+            ]);
 
         return response()->json($projects);
     }
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'github_repo' => 'nullable|url',
-            'image_url' => 'nullable|url',
+        $data = $request->validate([
+            'title' => ['required','string','max:255'],
+            'description' => ['required','string'],
+            'github_repo' => ['nullable','url'],
+            'image_url' => ['nullable','url'],
         ]);
 
         $project = Project::create([
-            'title' => $validatedData['title'],
-            'description' => $validatedData['description'],
-            'created_by_user_id' => auth('api')->id(),
-            'github_repo' => $validatedData['github_repo'] ?? null,
-            'image_url' => $validatedData['image_url'] ?? null,
+            ...$data,
+            'created_by_user_id' => $request->user()->id,
             'is_active' => true,
         ]);
 
@@ -41,11 +45,20 @@ class ProjectController extends Controller
     public function update(Request $request, $id)
     {
         $project = Project::findOrFail($id);
+
         if ($project->created_by_user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $project->update($request->only(['title', 'description', 'type', 'github_repo', 'is_active']));
+        $data = $request->validate([
+            'title' => ['sometimes','string','max:255'],
+            'description' => ['sometimes','string'],
+            'type' => ['sometimes','string'],
+            'github_repo' => ['nullable','url'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $project->update($data);
 
         return response()->json($project);
     }
@@ -53,6 +66,7 @@ class ProjectController extends Controller
     public function destroy(Request $request, $id)
     {
         $project = Project::findOrFail($id);
+
         if ($project->created_by_user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
