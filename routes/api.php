@@ -6,6 +6,7 @@ use App\Http\Controllers\GithubSocialLoginController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserController;
+use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
