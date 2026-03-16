@@ -18,7 +18,7 @@ class ProjectController extends Controller
                 'type',
                 'created_by_user_id',
                 'github_repo',
-                'is_active'
+                'is_active',
             ]);
 
         return response()->json($projects);
@@ -27,10 +27,10 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title' => ['required','string','max:255'],
-            'description' => ['required','string'],
-            'github_repo' => ['nullable','url'],
-            'image_url' => ['nullable','url'],
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'github_repo' => ['nullable', 'url'],
+            'image_url' => ['nullable', 'url'],
         ]);
 
         $project = Project::create([
@@ -51,10 +51,10 @@ class ProjectController extends Controller
         }
 
         $data = $request->validate([
-            'title' => ['sometimes','string','max:255'],
-            'description' => ['sometimes','string'],
-            'type' => ['sometimes','string'],
-            'github_repo' => ['nullable','url'],
+            'title' => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'string'],
+            'type' => ['sometimes', 'string'],
+            'github_repo' => ['nullable', 'url'],
             'is_active' => ['boolean'],
         ]);
 
