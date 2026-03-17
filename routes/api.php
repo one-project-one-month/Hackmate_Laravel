@@ -4,6 +4,7 @@ use App\Http\Controllers\GithubSocialLoginController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileSetupController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -22,6 +23,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
             Route::post('/refresh', [AuthController::class, 'refresh']);
             Route::post('/logout', [AuthController::class, 'logout']);
+            Route::post('/profile/setup', [ProfileSetupController::class, 'store']);
         });
     });
 });
