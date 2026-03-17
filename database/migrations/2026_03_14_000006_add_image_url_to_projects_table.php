@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tech_stacks', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->string('category')->nullable();
-            $table->timestamps();
+        Schema::table('projects', function (Blueprint $table) {
+            $table->string('image_url')->nullable()->after('github_repo');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tech_stacks');
+        Schema::table('projects', function (Blueprint $table) {
+            $table->dropColumn('image_url');
+        });
     }
 };

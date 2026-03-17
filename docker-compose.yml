@@ -1,16 +1,51 @@
 name: hackmate
 
 services:
+  api:
+    build:
+      context: .
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      APP_NAME: ${APP_NAME:-Laravel}
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+
+      DB_HOST: db
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-db}
+      DB_USERNAME: ${DB_USERNAME:-hackmate_user}
+      DB_PASSWORD: ${DB_PASSWORD:-hackmate_password}
+
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_ALGO: ${JWT_ALGO:-HS256}
+
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
+      GITHUB_OAUTH_REDIRECT_URI: ${GITHUB_OAUTH_REDIRECT_URI:-http://localhost:8000/api/v1/github/callback}
+      FRONTEND_GITHUB_CALLBACK_URL: ${FRONTEND_GITHUB_CALLBACK_URL:-http://localhost:3000/auth/github/callback}
+    depends_on:
+      - db
+
   db:
     image: postgres:18
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-hackmate_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hackmate_password}
-      POSTGRES_DB: ${POSTGRES_DB:-db}
+      POSTGRES_USER: ${DB_USERNAME:-hackmate_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-hackmate_password}
+      POSTGRES_DB: ${DB_DATABASE:-db}
     volumes:
-      - db_data:/var/lib/postgresql
+      - db_data:/var/lib/postgresql/data
+
+  mailing:
+    image: maildev/maildev:latest
+    ports:
+      - 1080:1080
+      - 1025:1025
 
 volumes:
   db_data:

@@ -15,11 +15,13 @@ CREATE TABLE users (
 
 CREATE TABLE tech_stacks (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    category VARCHAR(255)
+    name VARCHAR(255) NOT NULL UNIQUE,
+    category VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE user_tech_stack (
+CREATE TABLE user_tech_stacks (
     user_id INTEGER NOT NULL,
     tech_stack_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),

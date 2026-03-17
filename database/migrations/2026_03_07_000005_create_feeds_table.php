@@ -11,11 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tech_stacks', function (Blueprint $table) {
+        Schema::create('feeds', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('category')->nullable();
+            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->integer('score')->default(0);
+            $table->unsignedInteger('rank');
+            $table->timestamp('generated_at');
             $table->timestamps();
+
+            $table->unique('project_id');
+            $table->index('rank');
         });
     }
 
@@ -24,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tech_stacks');
+        Schema::dropIfExists('feeds');
     }
 };

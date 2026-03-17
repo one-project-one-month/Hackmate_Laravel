@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tech_stacks', function (Blueprint $table) {
+        Schema::create('project_roles', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('category')->nullable();
-            $table->timestamps();
+            $table->string('label')->unique();
         });
     }
 
@@ -24,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tech_stacks');
+        Schema::dropIfExists('project_roles');
     }
 };

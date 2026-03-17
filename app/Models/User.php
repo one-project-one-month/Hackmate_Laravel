@@ -4,9 +4,10 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\TechStack;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
@@ -27,7 +28,8 @@ class User extends Authenticatable implements JWTSubject
         'bio',
         'github_username',
         'github_id',
-        'has_profile_setup'
+        'github_token',
+        'has_profile_setup',
     ];
 
     /**
@@ -36,7 +38,7 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $hidden = [
-        'password'
+        'password',
     ];
 
     public function getJWTIdentifier()
@@ -63,15 +65,22 @@ class User extends Authenticatable implements JWTSubject
         ];
     }
 
-    public function techStacks()
+    public function techStacks(): BelongsToMany
     {
-        return $this->belongsToMany(TechStack::class, 'user_tech_stack', 'user_id', 'tech_stack_id');
+        return $this->belongsToMany(TechStack::class, 'user_tech_stacks', 'user_id', 'tech_stack_id');
     }
 
-    public function createdProjects()
+    public function projects(): HasMany
     {
         return $this->hasMany(Project::class, 'created_by_user_id');
     }
+
+    public function passwordResetOtps(): HasMany
+    {
+        return $this->hasMany(PasswordResetOtp::class, 'user_id');
+    }
+
+
 
     public function joinedProjects()
     {

@@ -6,19 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class TechStack extends Model
+class ProjectRole extends Model
 {
     use HasFactory;
 
-    protected $table = 'tech_stacks';
+    public $timestamps = false;
 
     protected $fillable = [
-        'name',
-        'category',
+        'label',
     ];
 
-    public function users(): BelongsToMany
+    public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_tech_stacks', 'tech_stack_id', 'user_id');
+        return $this->belongsToMany(Project::class, 'project_required_roles', 'role_id', 'project_id');
     }
 }

@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_tech_stacks', function (Blueprint $table) {
+        Schema::create('password_reset_otps', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('tech_stack_id');
+            $table->string('otp_code', 20);
+            $table->timestamp('expires_at');
+            $table->timestamp('used_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->primary(['user_id', 'tech_stack_id']);
-
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('tech_stack_id')->references('id')->on('tech_stacks')->onDelete('cascade');
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_tech_stacks');
+        Schema::dropIfExists('password_reset_otps');
     }
 };
