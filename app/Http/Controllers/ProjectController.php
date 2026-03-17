@@ -49,13 +49,13 @@ class ProjectController extends Controller
             'is_active' => true,
         ]);
 
-        if (!empty($requiredRoleLabels)) {
+        if (! empty($requiredRoleLabels)) {
             $requiredRoleIds = ProjectRole::query()
                 ->whereIn('label', $requiredRoleLabels)
                 ->pluck('id', 'label');
 
             $missingLabels = array_values(array_diff($requiredRoleLabels, $requiredRoleIds->keys()->all()));
-            if (!empty($missingLabels)) {
+            if (! empty($missingLabels)) {
                 $created = collect($missingLabels)
                     ->map(fn ($label) => ProjectRole::create(['label' => $label]));
                 $created->each(fn ($role) => $requiredRoleIds->put($role->label, $role->id));
@@ -90,13 +90,13 @@ class ProjectController extends Controller
 
         $project->update($data);
 
-        if (!empty($requiredRoleLabels)) {
+        if (! empty($requiredRoleLabels)) {
             $requiredRoleIds = ProjectRole::query()
                 ->whereIn('label', $requiredRoleLabels)
                 ->pluck('id', 'label');
 
             $missingLabels = array_values(array_diff($requiredRoleLabels, $requiredRoleIds->keys()->all()));
-            if (!empty($missingLabels)) {
+            if (! empty($missingLabels)) {
                 $created = collect($missingLabels)
                     ->map(fn ($label) => ProjectRole::create(['label' => $label]));
                 $created->each(fn ($role) => $requiredRoleIds->put($role->label, $role->id));

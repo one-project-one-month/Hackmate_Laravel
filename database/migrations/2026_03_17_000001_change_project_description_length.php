@@ -14,6 +14,7 @@ return new class extends Migration
 
         if ($driver === 'pgsql') {
             DB::statement('ALTER TABLE projects ALTER COLUMN description TYPE VARCHAR(1000)');
+
             return;
         }
 
@@ -31,6 +32,7 @@ return new class extends Migration
 
         if ($driver === 'pgsql') {
             DB::statement('ALTER TABLE projects ALTER COLUMN description TYPE TEXT');
+
             return;
         }
 
