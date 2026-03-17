@@ -41,6 +41,12 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  mailing:
+    image: maildev/maildev:latest
+    ports:
+      - 1080:1080
+      - 1025:1025
+
 volumes:
   db_data:
     name: hackmate_db_data

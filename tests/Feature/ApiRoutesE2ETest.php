@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Project;
+use App\Models\TechStack;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -30,6 +31,34 @@ it('returns user by id', function (): void {
             'status' => 200,
         ])
         ->assertJsonPath('content.id', $user->id);
+});
+
+it('returns all tech stacks', function (): void {
+    $php = TechStack::query()->create([
+        'name' => 'PHP',
+        'category' => 'language',
+    ]);
+
+    $laravel = TechStack::query()->create([
+        'name' => 'Laravel',
+        'category' => 'framework',
+    ]);
+
+    $response = $this->getJson('/api/v1/tech-stack')
+        ->assertOk()
+        ->assertJson([
+            'success' => true,
+            'message' => 'successful',
+            'status' => 200,
+        ]);
+
+    expect($response->json('content'))->toHaveCount(2);
+    expect($response->json('content.0.id'))->toBe($laravel->id);
+    expect($response->json('content.0.name'))->toBe('Laravel');
+    expect($response->json('content.0.category'))->toBe('framework');
+    expect($response->json('content.1.id'))->toBe($php->id);
+    expect($response->json('content.1.name'))->toBe('PHP');
+    expect($response->json('content.1.category'))->toBe('language');
 });
 
 it('returns 404 when user id does not exist', function (): void {
