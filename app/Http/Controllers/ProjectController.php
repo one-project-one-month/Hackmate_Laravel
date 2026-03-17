@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JoinRequest;
 use App\Models\Project;
 use App\Models\ProjectRole;
 use Illuminate\Http\Request;
@@ -74,6 +75,22 @@ class ProjectController extends Controller
         return response()->json([
             'success' => true,
             'data' => $project
+        ], 200);
+    }
+
+    public function listJoinRequests($project_id)
+    {
+        $project = Project::findOrFail($project_id);
+
+        if ($project->created_by_user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized access to this project requests.'], 403);
+        }
+
+        $requests = JoinRequest::where('project_id', $project_id)->with('user')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $requests
         ], 200);
     }
 
