@@ -1,7 +1,7 @@
 CREATE TABLE projects (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    description TEXT,
+    description VARCHAR(1000),
     type VARCHAR(100),
     created_by_user_id INTEGER,
     github_repo VARCHAR(255),
