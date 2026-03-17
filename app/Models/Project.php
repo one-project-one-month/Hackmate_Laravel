@@ -18,6 +18,7 @@ class Project extends Model
         'type',
         'created_by_user_id',
         'github_repo',
+        'image_url',
         'is_active',
         'like_count',
         'dislike_count',
@@ -35,11 +36,30 @@ class Project extends Model
 
     public function requiredRoles(): BelongsToMany
     {
-        return $this->belongsToMany(ProjectRole::class, 'project_required_roles', 'project_id', 'role_id');
+        return $this->belongsToMany(
+            ProjectRole::class,
+            'project_required_roles',
+            'project_id',
+            'role_id'
+        );
     }
 
     public function feed(): HasOne
     {
-        return $this->hasOne(Feed::class);
+        return $this->hasOne(Feed::class, 'project_id');
+    }
+
+    public function like()
+    {
+        $this->increment('like_count');
+
+        return $this->like_count;
+    }
+
+    public function dislike()
+    {
+        $this->increment('dislike_count');
+
+        return $this->dislike_count;
     }
 }
