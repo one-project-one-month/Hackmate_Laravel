@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('description')->nullable();
+            $table->string('description', 1000)->nullable();
             $table->string('type', 100)->nullable();
             $table->unsignedBigInteger('created_by_user_id')->nullable();
             $table->string('github_repo')->nullable();
