@@ -67,6 +67,16 @@ class ProjectController extends Controller
         return response()->json($project, 201);
     }
 
+    public function show($id)
+    {
+        $project = Project::with(['roles', 'requiredRoles'])->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $project
+        ], 200);
+    }
+
     public function update(Request $request, $id)
     {
         $project = Project::findOrFail($id);

@@ -37,6 +37,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/feed/metric/dislike', [FeedController::class, 'metricDislike']);
 
         Route::post('/projects', [ProjectController::class, 'store']);
+        Route::get('/projects/{id}', [ProjectController::class, 'show']);
         Route::get('/projects/own', [ProjectController::class, 'own']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
