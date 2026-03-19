@@ -24,14 +24,14 @@ class ProjectSeeder extends Seeder
             ->create();
 
         $requester = User::where('id', '!=', $user->id)->first();
-        if (!$requester) {
+        if (! $requester) {
             $requester = User::factory()->create();
         }
 
         JoinRequest::create([
             'project_id' => 1,
-            'user_id'    => $requester->id,
-            'status'     => 'pending',
+            'user_id' => $requester->id,
+            'status' => 'pending',
         ]);
     }
 }

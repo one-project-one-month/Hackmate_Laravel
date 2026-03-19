@@ -39,7 +39,6 @@ class Project extends Model
         return $this->hasMany(ProjectRole::class, 'project_id');
     }
 
-
     public function requiredRoles(): BelongsToMany
     {
         return $this->belongsToMany(

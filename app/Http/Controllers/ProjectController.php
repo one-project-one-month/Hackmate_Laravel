@@ -74,7 +74,7 @@ class ProjectController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $project
+            'data' => $project,
         ], 200);
     }
 
@@ -90,7 +90,7 @@ class ProjectController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $requests
+            'data' => $requests,
         ], 200);
     }
 
