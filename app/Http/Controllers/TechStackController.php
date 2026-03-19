@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TechStack;
+use App\Support\ApiResponse;
 
 class TechStackController extends Controller
 {
@@ -13,11 +14,6 @@ class TechStackController extends Controller
             ->orderBy('name')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'successful',
-            'content' => $techStacks,
-            'status' => 200,
-        ]);
+        return ApiResponse::success($techStacks);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
 class FeedController extends Controller
@@ -18,7 +19,7 @@ class FeedController extends Controller
             ->orderByDesc('projects.created_at')
             ->get();
 
-        return response()->json($projects);
+        return ApiResponse::success($projects);
     }
 
     public function metricLike(Request $request)
@@ -31,7 +32,7 @@ class FeedController extends Controller
 
         $project->like();
 
-        return response()->noContent();
+        return ApiResponse::success(null, 'successful');
     }
 
     public function metricDislike(Request $request)
@@ -44,6 +45,6 @@ class FeedController extends Controller
 
         $project->dislike();
 
-        return response()->noContent();
+        return ApiResponse::success(null, 'successful');
     }
 }
