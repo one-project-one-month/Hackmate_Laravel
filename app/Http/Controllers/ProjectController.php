@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\JoinRequest;
 use App\Models\Project;
 use App\Models\ProjectRole;
+use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -23,7 +24,7 @@ class ProjectController extends Controller
                 'is_active',
             ]);
 
-        return response()->json($projects);
+        return ApiResponse::success($projects);
     }
 
     public function store(Request $request)
@@ -65,17 +66,14 @@ class ProjectController extends Controller
             $project->requiredRoles()->sync($requiredRoleIds->values()->all());
         }
 
-        return response()->json($project, 201);
+        return ApiResponse::success($project, 'successful', 201);
     }
 
     public function show($id)
     {
         $project = Project::with(['roles', 'requiredRoles'])->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $project,
-        ], 200);
+        return ApiResponse::success($project);
     }
 
     public function listJoinRequests($project_id)
@@ -83,15 +81,12 @@ class ProjectController extends Controller
         $project = Project::findOrFail($project_id);
 
         if ($project->created_by_user_id !== auth()->id()) {
-            return response()->json(['message' => 'Unauthorized access to this project requests.'], 403);
+            return ApiResponse::error('Unauthorized access to this project requests.', 403);
         }
 
         $requests = JoinRequest::where('project_id', $project_id)->with('user')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $requests,
-        ], 200);
+        return ApiResponse::success($requests);
     }
 
     public function update(Request $request, $id)
@@ -99,7 +94,7 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
 
         if ($project->created_by_user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return ApiResponse::error('Unauthorized', 403);
         }
 
         $data = $request->validate([
@@ -132,7 +127,7 @@ class ProjectController extends Controller
             $project->requiredRoles()->syncWithoutDetaching($requiredRoleIds->values()->all());
         }
 
-        return response()->json($project);
+        return ApiResponse::success($project);
     }
 
     public function destroy(Request $request, $id)
@@ -140,11 +135,11 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
 
         if ($project->created_by_user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return ApiResponse::error('Unauthorized', 403);
         }
 
         $project->delete();
 
-        return response()->noContent();
+        return ApiResponse::success(null, 'Project deleted successfully.');
     }
 }

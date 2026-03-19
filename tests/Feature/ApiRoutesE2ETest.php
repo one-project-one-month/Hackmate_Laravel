@@ -21,7 +21,7 @@ function loginToken(User $user, string $password = 'password123'): string
         'password' => $password,
     ])->assertOk();
 
-    return $response->json('access_token');
+    return $response->json('content.access_token');
 }
 
 it('stores project with image', function (): void {
@@ -43,7 +43,7 @@ it('stores project with image', function (): void {
         ])
         ->assertCreated();
 
-    $imagePath = $response->json('image');
+    $imagePath = $response->json('content.image');
 
     Storage::disk('public')->assertExists($imagePath);
 });
@@ -63,7 +63,7 @@ it('stores project with required roles as labels', function (): void {
         ])
         ->assertCreated();
 
-    $projectId = $response->json('id');
+    $projectId = $response->json('content.id');
 
     $backendRoleId = ProjectRole::query()->where('label', 'backend')->value('id');
     $designerRoleId = ProjectRole::query()->where('label', 'designer')->value('id');
@@ -138,7 +138,7 @@ it('updates project image', function (): void {
         ])
         ->assertOk();
 
-    $imagePath = $response->json('image');
+    $imagePath = $response->json('content.image');
 
     Storage::disk('public')->assertExists($imagePath);
 });
@@ -213,9 +213,9 @@ it('returns only the authenticated users own projects', function (): void {
         ->getJson('/api/v1/projects/own')
         ->assertOk();
 
-    expect($response->json())->toHaveCount(2);
-    expect($response->json('0.id'))->toBe($newerProject->id);
-    expect($response->json('1.id'))->toBe($olderProject->id);
+    expect($response->json('content'))->toHaveCount(2);
+    expect($response->json('content.0.id'))->toBe($newerProject->id);
+    expect($response->json('content.1.id'))->toBe($olderProject->id);
 });
 
 it('updates project when authenticated owner sends valid data', function (): void {
@@ -234,7 +234,7 @@ it('updates project when authenticated owner sends valid data', function (): voi
             'title' => 'Updated Title',
         ])
         ->assertOk()
-        ->assertJsonPath('title', 'Updated Title');
+        ->assertJsonPath('content.title', 'Updated Title');
 });
 
 it('deletes a project when requested by the owner', function (): void {
@@ -250,7 +250,11 @@ it('deletes a project when requested by the owner', function (): void {
 
     $this->withToken($token)
         ->deleteJson('/api/v1/projects/'.$project->id)
-        ->assertNoContent();
+        ->assertOk()
+        ->assertJson([
+            'success' => true,
+            'status' => 200,
+        ]);
 
     $this->assertDatabaseMissing('projects', [
         'id' => $project->id,
@@ -273,7 +277,11 @@ it('increments project like metric', function (): void {
         ->postJson('/api/v1/feed/metric/like', [
             'project_id' => $project->id,
         ])
-        ->assertNoContent();
+        ->assertOk()
+        ->assertJson([
+            'success' => true,
+            'status' => 200,
+        ]);
 
     $this->assertDatabaseHas('projects', [
         'id' => $project->id,
@@ -297,7 +305,11 @@ it('increments project dislike metric', function (): void {
         ->postJson('/api/v1/feed/metric/dislike', [
             'project_id' => $project->id,
         ])
-        ->assertNoContent();
+        ->assertOk()
+        ->assertJson([
+            'success' => true,
+            'status' => 200,
+        ]);
 
     $this->assertDatabaseHas('projects', [
         'id' => $project->id,
