@@ -39,6 +39,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/feed/metric/dislike', [FeedController::class, 'metricDislike']);
 
         Route::post('/projects', [ProjectController::class, 'store']);
+
         Route::get('/projects/own', [ProjectController::class, 'own']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
@@ -49,5 +50,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/join-requests/{id}/approve', [RequestController::class, 'approve']);
         Route::post('/join-requests/{id}/disapprove', [RequestController::class, 'disapprove']);
         Route::get('/projects/{projectId}/join-requests', [RequestController::class, 'list']);
+        Route::get('/projects/{project_id}/requests', [ProjectController::class, 'listJoinRequests']);
     });
 });

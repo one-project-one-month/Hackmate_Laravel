@@ -34,9 +34,9 @@ class Project extends Model
         return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
-    public function members()
+    public function roles()
     {
-        return $this->belongsToMany(User::class, 'project_user', 'project_id', 'user_id');
+        return $this->hasMany(ProjectRole::class, 'project_id');
     }
 
     public function requiredRoles(): BelongsToMany

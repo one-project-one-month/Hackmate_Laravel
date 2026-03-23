@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\JoinRequest;
+use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
 class RequestController extends Controller
@@ -13,15 +14,12 @@ class RequestController extends Controller
         $userId = $request->user_id;
 
         if ($joinRequest->approve($userId)) {
-            return response()->json([
-                'message' => 'Join request approved successfully.',
+            return ApiResponse::success([
                 'status' => $joinRequest->status,
-            ]);
+            ], 'Join request approved successfully.');
         }
 
-        return response()->json([
-            'message' => 'You do not have permission to approve this request.',
-        ], 403);
+        return ApiResponse::error('You do not have permission to approve this request.', 403);
     }
 
     public function disapprove(Request $request, string $id)
@@ -30,15 +28,12 @@ class RequestController extends Controller
         $userId = $request->user_id;
 
         if ($joinRequest->disapprove($userId)) {
-            return response()->json([
-                'message' => 'Join request disapproved successfully.',
+            return ApiResponse::success([
                 'status' => $joinRequest->status,
-            ]);
+            ], 'Join request disapproved successfully.');
         }
 
-        return response()->json([
-            'message' => 'You do not have permission to disapprove this request.',
-        ], 403);
+        return ApiResponse::error('You do not have permission to disapprove this request.', 403);
     }
 
     public function list(Request $request, string $projectId)
@@ -54,6 +49,6 @@ class RequestController extends Controller
                 ];
             });
 
-        return response()->json($requests);
+        return ApiResponse::success($requests);
     }
 }

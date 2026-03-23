@@ -24,12 +24,17 @@ it('logs in and returns a bearer token payload', function (): void {
 
     $response->assertOk()
         ->assertJsonStructure([
-            'access_token',
-            'token_type',
-            'expires_in',
+            'success',
+            'message',
+            'content' => [
+                'access_token',
+                'token_type',
+                'expires_in',
+            ],
+            'status',
         ]);
 
-    expect($response->json('token_type'))->toBe('bearer');
+    expect($response->json('content.token_type'))->toBe('bearer');
 });
 
 it('rejects invalid credentials', function (): void {
@@ -44,7 +49,11 @@ it('rejects invalid credentials', function (): void {
     ]);
 
     $response->assertStatus(401)
-        ->assertJson(['error' => 'Unauthorized']);
+        ->assertJson([
+            'success' => false,
+            'message' => 'Unauthorized',
+            'status' => 401,
+        ]);
 });
 
 it('returns 401 json when accessing protected endpoint without token', function (): void {
@@ -64,15 +73,18 @@ it('returns current user for valid bearer token', function (): void {
         'password' => $password,
     ])->assertOk();
 
-    $token = $login->json('access_token');
+    $token = $login->json('content.access_token');
 
-    $this->withToken($token)
+    $me = $this->withToken($token)
         ->getJson('/api/v1/auth/me')
         ->assertOk()
         ->assertJson([
-            'id' => $user->id,
-            'email' => 'me@example.com',
+            'success' => true,
+            'status' => 200,
         ]);
+
+    expect($me->json('content.id'))->toBe($user->id);
+    expect($me->json('content.email'))->toBe('me@example.com');
 });
 
 it('completes forgot-password to reset-password flow', function (): void {
@@ -89,9 +101,9 @@ it('completes forgot-password to reset-password flow', function (): void {
     ]);
 
     $forgot->assertOk()
-        ->assertJsonStructure(['message', 'otp']);
+        ->assertJsonStructure(['message', 'content' => ['otp']]);
 
-    $otp = (string) $forgot->json('otp');
+    $otp = (string) $forgot->json('content.otp');
 
     $this->postJson('/api/v1/auth/reset-password', [
         'email' => 'reset@example.com',
@@ -103,7 +115,7 @@ it('completes forgot-password to reset-password flow', function (): void {
     $this->postJson('/api/v1/auth/login', [
         'email' => 'reset@example.com',
         'password' => $newPassword,
-    ])->assertOk()->assertJsonStructure(['access_token']);
+    ])->assertOk()->assertJsonStructure(['content' => ['access_token']]);
 });
 
 it('refreshes and logs out with a valid token', function (): void {
@@ -119,12 +131,12 @@ it('refreshes and logs out with a valid token', function (): void {
         'password' => $password,
     ])->assertOk();
 
-    $token = $login->json('access_token');
+    $token = $login->json('content.access_token');
 
     $this->withToken($token)
         ->postJson('/api/v1/auth/refresh')
         ->assertOk()
-        ->assertJsonStructure(['access_token', 'token_type', 'expires_in']);
+        ->assertJsonStructure(['content' => ['access_token', 'token_type', 'expires_in']]);
 
     $this->withToken($token)
         ->postJson('/api/v1/auth/logout')

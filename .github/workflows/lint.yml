@@ -7,6 +7,10 @@ on:
       - main
       - feat/ci-cd
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Laravel Pint
@@ -21,6 +25,18 @@ jobs:
         with:
           php-version: '8.4'
           coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php-${{ steps.composer-cache.outputs.dir }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ steps.composer-cache.outputs.dir }}-
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
