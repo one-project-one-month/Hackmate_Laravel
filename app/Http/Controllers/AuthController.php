@@ -19,7 +19,7 @@ class AuthController extends Controller
     {
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth('api')->attempt($credentials)) {
+        if (!$token = auth('api')->attempt($credentials)) {
             return ApiResponse::error('Unauthorized', 401);
         }
 
@@ -67,6 +67,8 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $user = auth('api')->user();
+
         return ApiResponse::success([
             'access_token' => $token,
             'token_type' => 'bearer',
@@ -127,7 +129,7 @@ class AuthController extends Controller
                 ->where('expires_at', '>=', now())
                 ->first();
 
-            if (! $resetData) {
+            if (!$resetData) {
                 return ApiResponse::error('Invalid or expired OTP.', 422);
             }
 
