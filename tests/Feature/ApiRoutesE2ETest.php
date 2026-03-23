@@ -94,6 +94,7 @@ it('completes profile setup with profile image', function (): void {
     $imagePath = $response->json('user.profile_image');
 
     expect($imagePath)->not->toBeNull();
+    expect($imagePath)->toStartWith('profile-images/');
 
     Storage::disk('public')->assertExists($imagePath);
 
@@ -259,6 +260,7 @@ it('returns null profile image url when no image uploaded', function (): void {
         ->assertOk();
 
     expect($response->json('profile_image_url'))->toBeNull();
+    expect($response->json('user.profile_image'))->toBeNull();
 });
 
 it('loads tech stacks in profile setup response', function (): void {
@@ -281,4 +283,198 @@ it('loads tech stacks in profile setup response', function (): void {
 
     expect($response->json('user.tech_stacks.0.name'))->toBe('PHP');
     expect($response->json('user.tech_stacks.0.category'))->toBe('language');
+});
+
+it('marks has_profile_setup true even when it was already false', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+        'has_profile_setup' => false,
+    ]);
+
+    $stack = TechStack::query()->create([
+        'name' => 'Node.js',
+        'category' => 'runtime',
+    ]);
+
+    $token = loginToken($user);
+
+    $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$stack->id],
+        ])
+        ->assertOk();
+
+    $user->refresh();
+
+    expect($user->has_profile_setup)->toBeTrue();
+});
+
+it('allows png jpeg jpg and webp profile images', function (string $filename, string $mime): void {
+    Storage::fake('public');
+
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $stack = TechStack::query()->create([
+        'name' => 'React',
+        'category' => 'framework',
+    ]);
+
+    $token = loginToken($user);
+
+    $file = UploadedFile::fake()->image($filename);
+
+    $this->withToken($token)
+        ->post('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$stack->id],
+            'profile_image' => $file,
+        ])
+        ->assertOk();
+})->with([
+    ['avatar.png', 'image/png'],
+    ['avatar.jpg', 'image/jpeg'],
+    ['avatar.jpeg', 'image/jpeg'],
+    ['avatar.webp', 'image/webp'],
+]);
+
+it('does not affect another users tech stacks', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $otherUser = User::factory()->create();
+
+    $userStack = TechStack::query()->create([
+        'name' => 'Laravel',
+        'category' => 'framework',
+    ]);
+
+    $otherStack = TechStack::query()->create([
+        'name' => 'Django',
+        'category' => 'framework',
+    ]);
+
+    $otherUser->techStacks()->sync([$otherStack->id]);
+
+    $token = loginToken($user);
+
+    $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$userStack->id],
+        ])
+        ->assertOk();
+
+    $this->assertDatabaseHas('user_tech_stacks', [
+        'user_id' => $otherUser->id,
+        'tech_stack_id' => $otherStack->id,
+    ]);
+
+    $this->assertDatabaseHas('user_tech_stacks', [
+        'user_id' => $user->id,
+        'tech_stack_id' => $userStack->id,
+    ]);
+});
+
+it('replaces existing profile image path when a new one is uploaded', function (): void {
+    Storage::fake('public');
+
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+        'profile_image' => 'profile-images/old-avatar.jpg',
+    ]);
+
+    $stack = TechStack::query()->create([
+        'name' => 'PHP',
+        'category' => 'language',
+    ]);
+
+    $token = loginToken($user);
+
+    $file = UploadedFile::fake()->image('new-avatar.jpg');
+
+    $response = $this->withToken($token)
+        ->post('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$stack->id],
+            'profile_image' => $file,
+        ])
+        ->assertOk();
+
+    $newPath = $response->json('user.profile_image');
+
+    expect($newPath)->not->toBe('profile-images/old-avatar.jpg');
+    expect($newPath)->toStartWith('profile-images/');
+});
+
+it('returns the authenticated user in the response', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $stack = TechStack::query()->create([
+        'name' => 'Rust',
+        'category' => 'language',
+    ]);
+
+    $token = loginToken($user);
+
+    $response = $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$stack->id],
+        ])
+        ->assertOk();
+
+    expect($response->json('user.id'))->toBe($user->id);
+    expect($response->json('user.has_profile_setup'))->toBeTrue();
+});
+
+it('stores multiple tech stacks in one request', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $one = TechStack::query()->create([
+        'name' => 'PHP',
+        'category' => 'language',
+    ]);
+
+    $two = TechStack::query()->create([
+        'name' => 'Laravel',
+        'category' => 'framework',
+    ]);
+
+    $three = TechStack::query()->create([
+        'name' => 'MySQL',
+        'category' => 'database',
+    ]);
+
+    $token = loginToken($user);
+
+    $response = $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$one->id, $two->id, $three->id],
+        ])
+        ->assertOk();
+
+    expect($response->json('user.tech_stacks'))->toHaveCount(3);
+});
+
+it('fails when one tech stack id is invalid in a mixed payload', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $valid = TechStack::query()->create([
+        'name' => 'Elixir',
+        'category' => 'language',
+    ]);
+
+    $token = loginToken($user);
+
+    $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$valid->id, 999999],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('tech_stack.1');
 });
