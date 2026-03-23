@@ -79,4 +79,11 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(PasswordResetOtp::class, 'user_id');
     }
+
+
+
+    public function joinedProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'project_id');
+    }
 }

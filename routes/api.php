@@ -7,6 +7,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\TechStackController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileSetupController;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
             Route::post('/refresh', [AuthController::class, 'refresh']);
             Route::post('/logout', [AuthController::class, 'logout']);
+            Route::post('/profile/setup', [ProfileSetupController::class, 'store']);
         });
     });
 

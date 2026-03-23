@@ -59,7 +59,8 @@ class AuthController extends Controller
     }
 
     /**
-     * Get the token array structure.
+     * Get the token array structure. Updated to include user_id and has_profile_setup 
+     * for redirection to the profile setup page.
      *
      * @param  string  $token
      * @return \Illuminate\Http\JsonResponse
@@ -69,7 +70,11 @@ class AuthController extends Controller
         return ApiResponse::success([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL(),
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'user' => [
+                'id' => $user->id,
+                'has_profile_setup' => $user->has_profile_setup,
+            ],
         ]);
     }
 
