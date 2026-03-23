@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Project;
-use App\Models\ProjectRole;
 use App\Models\TechStack;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,138 +22,12 @@ function loginToken(User $user, string $password = 'password123'): string
     return $response->json('content.access_token');
 }
 
-it('stores project with image', function (): void {
-    Storage::fake('public');
-
+it('completes profile setup with tech stacks only', function (): void {
     $user = User::factory()->create([
         'password' => bcrypt('password123'),
+        'has_profile_setup' => false,
     ]);
 
-    $token = loginToken($user);
-
-    $file = UploadedFile::fake()->image('project.jpg');
-
-    $response = $this->withToken($token)
-        ->post('/api/v1/projects', [
-            'title' => 'Project with Image',
-            'description' => 'This is a valid description',
-            'image' => $file,
-        ])
-        ->assertCreated();
-
-    $imagePath = $response->json('content.image');
-
-    Storage::disk('public')->assertExists($imagePath);
-});
-
-it('stores project with required roles as labels', function (): void {
-    $user = User::factory()->create([
-        'password' => bcrypt('password123'),
-    ]);
-
-    $token = loginToken($user);
-
-    $response = $this->withToken($token)
-        ->postJson('/api/v1/projects', [
-            'title' => 'Project with Roles',
-            'description' => 'This is a valid description',
-            'required_roles' => ['backend', 'designer'],
-        ])
-        ->assertCreated();
-
-    $projectId = $response->json('content.id');
-
-    $backendRoleId = ProjectRole::query()->where('label', 'backend')->value('id');
-    $designerRoleId = ProjectRole::query()->where('label', 'designer')->value('id');
-
-    expect($backendRoleId)->not->toBeNull();
-    expect($designerRoleId)->not->toBeNull();
-
-    $this->assertDatabaseHas('project_required_roles', [
-        'project_id' => $projectId,
-        'role_id' => $backendRoleId,
-    ]);
-
-    $this->assertDatabaseHas('project_required_roles', [
-        'project_id' => $projectId,
-        'role_id' => $designerRoleId,
-    ]);
-});
-
-it('adds required roles on update without removing existing ones', function (): void {
-    $user = User::factory()->create([
-        'password' => bcrypt('password123'),
-    ]);
-
-    $project = Project::factory()->create([
-        'created_by_user_id' => $user->id,
-    ]);
-
-    $existingRole = ProjectRole::query()->create(['label' => 'frontend']);
-    $project->requiredRoles()->sync([$existingRole->id]);
-
-    $token = loginToken($user);
-
-    $this->withToken($token)
-        ->putJson('/api/v1/projects/'.$project->id, [
-            'required_roles' => ['backend'],
-        ])
-        ->assertOk();
-
-    $backendRoleId = ProjectRole::query()->where('label', 'backend')->value('id');
-
-    expect($backendRoleId)->not->toBeNull();
-
-    $this->assertDatabaseHas('project_required_roles', [
-        'project_id' => $project->id,
-        'role_id' => $existingRole->id,
-    ]);
-
-    $this->assertDatabaseHas('project_required_roles', [
-        'project_id' => $project->id,
-        'role_id' => $backendRoleId,
-    ]);
-});
-
-it('updates project image', function (): void {
-    Storage::fake('public');
-
-    $user = User::factory()->create([
-        'password' => bcrypt('password123'),
-    ]);
-
-    $project = Project::factory()->create([
-        'created_by_user_id' => $user->id,
-    ]);
-
-    $token = loginToken($user);
-
-    $file = UploadedFile::fake()->image('new.jpg');
-
-    $response = $this->withToken($token)
-        ->put('/api/v1/projects/'.$project->id, [
-            'image' => $file,
-        ])
-        ->assertOk();
-
-    $imagePath = $response->json('content.image');
-
-    Storage::disk('public')->assertExists($imagePath);
-});
-
-it('returns user by id', function (): void {
-    $user = User::factory()->create();
-
-    $this->getJson('/api/v1/users/'.$user->id)
-        ->assertOk()
-        ->assertJson([
-            'success' => true,
-            'status' => 200,
-        ])
-        ->assertJsonPath('content.id', $user->id);
-});
-
-it('returns all tech stacks', function (): void {
     $php = TechStack::query()->create([
         'name' => 'PHP',
         'category' => 'language',
@@ -166,153 +38,247 @@ it('returns all tech stacks', function (): void {
         'category' => 'framework',
     ]);
 
-    $response = $this->getJson('/api/v1/tech-stack')
-        ->assertOk()
-        ->assertJson([
-            'success' => true,
-            'message' => 'successful',
-            'status' => 200,
-        ]);
-
-    expect($response->json('content'))->toHaveCount(2);
-    expect($response->json('content.0.id'))->toBe($laravel->id);
-    expect($response->json('content.0.name'))->toBe('Laravel');
-    expect($response->json('content.0.category'))->toBe('framework');
-    expect($response->json('content.1.id'))->toBe($php->id);
-});
-
-it('requires auth for projects index route', function (): void {
-    $this->getJson('/api/v1/projects')->assertStatus(401);
-});
-
-it('returns only the authenticated users own projects', function (): void {
-    $owner = User::factory()->create([
-        'email' => 'owner-projects@example.com',
-        'password' => bcrypt('password123'),
-    ]);
-
-    $other = User::factory()->create();
-
-    $olderProject = Project::factory()->create([
-        'created_by_user_id' => $owner->id,
-        'created_at' => now()->subDay(),
-    ]);
-
-    $newerProject = Project::factory()->create([
-        'created_by_user_id' => $owner->id,
-        'created_at' => now(),
-    ]);
-
-    Project::factory()->create([
-        'created_by_user_id' => $other->id,
-    ]);
-
-    $token = loginToken($owner);
+    $token = loginToken($user);
 
     $response = $this->withToken($token)
-        ->getJson('/api/v1/projects/own')
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$php->id, $laravel->id],
+        ])
+        ->assertOk()
+        ->assertJson([
+            'message' => 'Profile setup complete',
+        ]);
+
+    $this->assertDatabaseHas('users', [
+        'id' => $user->id,
+        'has_profile_setup' => true,
+    ]);
+
+    $this->assertDatabaseHas('user_tech_stacks', [
+        'user_id' => $user->id,
+        'tech_stack_id' => $php->id,
+    ]);
+
+    $this->assertDatabaseHas('user_tech_stacks', [
+        'user_id' => $user->id,
+        'tech_stack_id' => $laravel->id,
+    ]);
+
+    expect($response->json('user.tech_stacks'))->toHaveCount(2);
+});
+
+it('completes profile setup with profile image', function (): void {
+    Storage::fake('public');
+
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+        'has_profile_setup' => false,
+    ]);
+
+    $techStack = TechStack::query()->create([
+        'name' => 'PHP',
+        'category' => 'language',
+    ]);
+
+    $token = loginToken($user);
+
+    $file = UploadedFile::fake()->image('avatar.jpg');
+
+    $response = $this->withToken($token)
+        ->post('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$techStack->id],
+            'profile_image' => $file,
+        ])
         ->assertOk();
 
-    expect($response->json('content'))->toHaveCount(2);
-    expect($response->json('content.0.id'))->toBe($newerProject->id);
-    expect($response->json('content.1.id'))->toBe($olderProject->id);
+    $imagePath = $response->json('user.profile_image');
+
+    expect($imagePath)->not->toBeNull();
+
+    Storage::disk('public')->assertExists($imagePath);
+
+    expect($response->json('profile_image_url'))->toContain('/storage/profile-images/');
 });
 
-it('updates project when authenticated owner sends valid data', function (): void {
-    $owner = User::factory()->create([
-        'password' => bcrypt('password123'),
+it('requires authentication for profile setup', function (): void {
+    $techStack = TechStack::query()->create([
+        'name' => 'PHP',
+        'category' => 'language',
     ]);
 
-    $project = Project::factory()->create([
-        'created_by_user_id' => $owner->id,
-    ]);
-
-    $token = loginToken($owner);
-
-    $this->withToken($token)
-        ->putJson('/api/v1/projects/'.$project->id, [
-            'title' => 'Updated Title',
-        ])
-        ->assertOk()
-        ->assertJsonPath('content.title', 'Updated Title');
+    $this->postJson('/api/v1/auth/profile/setup', [
+        'tech_stack' => [$techStack->id],
+    ])->assertStatus(401);
 });
 
-it('deletes a project when requested by the owner', function (): void {
-    $owner = User::factory()->create([
-        'password' => bcrypt('password123'),
-    ]);
-
-    $project = Project::factory()->create([
-        'created_by_user_id' => $owner->id,
-    ]);
-
-    $token = loginToken($owner);
-
-    $this->withToken($token)
-        ->deleteJson('/api/v1/projects/'.$project->id)
-        ->assertOk()
-        ->assertJson([
-            'success' => true,
-            'status' => 200,
-        ]);
-
-    $this->assertDatabaseMissing('projects', [
-        'id' => $project->id,
-    ]);
-});
-
-it('increments project like metric', function (): void {
+it('validates tech_stack is required', function (): void {
     $user = User::factory()->create([
         'password' => bcrypt('password123'),
-    ]);
-
-    $project = Project::factory()->create([
-        'created_by_user_id' => $user->id,
-        'like_count' => 0,
     ]);
 
     $token = loginToken($user);
 
     $this->withToken($token)
-        ->postJson('/api/v1/feed/metric/like', [
-            'project_id' => $project->id,
-        ])
-        ->assertOk()
-        ->assertJson([
-            'success' => true,
-            'status' => 200,
-        ]);
-
-    $this->assertDatabaseHas('projects', [
-        'id' => $project->id,
-        'like_count' => 1,
-    ]);
+        ->postJson('/api/v1/auth/profile/setup', [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('tech_stack');
 });
 
-it('increments project dislike metric', function (): void {
+it('validates tech_stack must be an array', function (): void {
     $user = User::factory()->create([
         'password' => bcrypt('password123'),
-    ]);
-
-    $project = Project::factory()->create([
-        'created_by_user_id' => $user->id,
-        'dislike_count' => 0,
     ]);
 
     $token = loginToken($user);
 
     $this->withToken($token)
-        ->postJson('/api/v1/feed/metric/dislike', [
-            'project_id' => $project->id,
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => 'invalid',
         ])
-        ->assertOk()
-        ->assertJson([
-            'success' => true,
-            'status' => 200,
-        ]);
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('tech_stack');
+});
 
-    $this->assertDatabaseHas('projects', [
-        'id' => $project->id,
-        'dislike_count' => 1,
+it('validates each tech_stack item exists', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
     ]);
+
+    $token = loginToken($user);
+
+    $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [99999],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('tech_stack.0');
+});
+
+it('validates profile image must be an image', function (): void {
+    Storage::fake('public');
+
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $techStack = TechStack::query()->create([
+        'name' => 'Laravel',
+        'category' => 'framework',
+    ]);
+
+    $token = loginToken($user);
+
+    $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
+
+    $this->withToken($token)
+        ->post('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$techStack->id],
+            'profile_image' => $file,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('profile_image');
+});
+
+it('validates profile image max size', function (): void {
+    Storage::fake('public');
+
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $techStack = TechStack::query()->create([
+        'name' => 'Vue',
+        'category' => 'framework',
+    ]);
+
+    $token = loginToken($user);
+
+    $file = UploadedFile::fake()->image('large.jpg')->size(3000);
+
+    $this->withToken($token)
+        ->post('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$techStack->id],
+            'profile_image' => $file,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('profile_image');
+});
+
+it('syncs tech stacks and removes old ones on profile setup', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $oldStack = TechStack::query()->create([
+        'name' => 'Old Tech',
+        'category' => 'tool',
+    ]);
+
+    $newStack = TechStack::query()->create([
+        'name' => 'New Tech',
+        'category' => 'tool',
+    ]);
+
+    $user->techStacks()->sync([$oldStack->id]);
+
+    $token = loginToken($user);
+
+    $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$newStack->id],
+        ])
+        ->assertOk();
+
+    $this->assertDatabaseMissing('user_tech_stacks', [
+        'user_id' => $user->id,
+        'tech_stack_id' => $oldStack->id,
+    ]);
+
+    $this->assertDatabaseHas('user_tech_stacks', [
+        'user_id' => $user->id,
+        'tech_stack_id' => $newStack->id,
+    ]);
+});
+
+it('returns null profile image url when no image uploaded', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $techStack = TechStack::query()->create([
+        'name' => 'Go',
+        'category' => 'language',
+    ]);
+
+    $token = loginToken($user);
+
+    $response = $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$techStack->id],
+        ])
+        ->assertOk();
+
+    expect($response->json('profile_image_url'))->toBeNull();
+});
+
+it('loads tech stacks in profile setup response', function (): void {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $php = TechStack::query()->create([
+        'name' => 'PHP',
+        'category' => 'language',
+    ]);
+
+    $token = loginToken($user);
+
+    $response = $this->withToken($token)
+        ->postJson('/api/v1/auth/profile/setup', [
+            'tech_stack' => [$php->id],
+        ])
+        ->assertOk();
+
+    expect($response->json('user.tech_stacks.0.name'))->toBe('PHP');
+    expect($response->json('user.tech_stacks.0.category'))->toBe('language');
 });

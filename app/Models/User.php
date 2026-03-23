@@ -29,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'github_username',
         'github_id',
         'github_token',
+        'profile_image',
         'has_profile_setup',
     ];
 
