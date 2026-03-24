@@ -31,7 +31,7 @@ class UserController extends Controller
         $user = auth('api')->user();
 
         $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => 'nullable|string|max:100|required_without_all:preferred_role,bio,github_username,tech_stacks',
             'preferred_role' => 'nullable|string|max:100',
             'bio' => 'nullable|string|max:500',
             'github_username' => 'nullable|string|max:100',
@@ -39,12 +39,9 @@ class UserController extends Controller
             'tech_stacks.*' => 'exists:tech_stacks,id',
         ]);
 
-        $user->update([
-            'name' => $request->name ?? $user->name,
-            'preferred_role' => $request->preferred_role ?? $user->preferred_role,
-            'bio' => $request->bio,
-            'github_username' => $request->github_username,
-        ]);
+        $updateData = $request->only(['name', 'preferred_role', 'bio', 'github_username']);
+        
+        $user->update(array_filter($updateData));
 
         if ($request->has('tech_stacks')) {
             $user->techStacks()->sync($request->tech_stacks);
@@ -54,7 +51,7 @@ class UserController extends Controller
             'success' => true,
             'message' => 'Profile updated successfully',
             'content' => $user->load('techStacks'),
-            'status' => 200,
+            'status' => 200
         ]);
     }
 }

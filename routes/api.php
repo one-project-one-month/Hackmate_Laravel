@@ -48,4 +48,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/join-requests/{id}/disapprove', [RequestController::class, 'disapprove']);
         Route::get('/projects/{projectId}/join-requests', [RequestController::class, 'list']);
     });
+
+    Route::prefix('user')->group(function () {
+        Route::get('/{id}', [UserController::class, 'getUserById']);
+        Route::middleware('auth:api')->group(function () {
+            Route::put('/self-profile', [UserController::class, 'updateSelfUserInfo']);
+        });
+    });
 });
