@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\JoinRequest;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -21,5 +22,16 @@ class ProjectSeeder extends Seeder
                 ])
             )
             ->create();
+
+        $requester = User::where('id', '!=', $user->id)->first();
+        if (! $requester) {
+            $requester = User::factory()->create();
+        }
+
+        JoinRequest::create([
+            'project_id' => 1,
+            'user_id' => $requester->id,
+            'status' => 'pending',
+        ]);
     }
 }

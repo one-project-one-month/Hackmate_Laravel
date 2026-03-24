@@ -29,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'github_username',
         'github_id',
         'github_token',
+        'profile_image',
         'has_profile_setup',
     ];
 
@@ -78,5 +79,12 @@ class User extends Authenticatable implements JWTSubject
     public function passwordResetOtps(): HasMany
     {
         return $this->hasMany(PasswordResetOtp::class, 'user_id');
+    }
+
+
+
+    public function joinedProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'project_id');
     }
 }

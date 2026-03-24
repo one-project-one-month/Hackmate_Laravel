@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -11,19 +12,10 @@ class UserController extends Controller
     {
         $user = User::find($id);
         if (! $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found',
-                'status' => 404,
-            ], 404);
+            return ApiResponse::error('User not found', 404);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'successful',
-            'content' => $user,
-            'status' => 200,
-        ]);
+        return ApiResponse::success($user);
     }
 
     public function updateSelfUserInfo(Request $request)

@@ -39,7 +39,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-hackmate_password}
       POSTGRES_DB: ${DB_DATABASE:-db}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
 
   mailing:
     image: maildev/maildev:latest

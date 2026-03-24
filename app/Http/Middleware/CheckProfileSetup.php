@@ -2,13 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use App\Support\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AuthMiddleware
+class CheckProfileSetup
 {
     /**
      * Handle an incoming request.
@@ -17,8 +15,13 @@ class AuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! Auth::guard('api')->check()) {
-            return ApiResponse::error('Unauthenticated.', 401);
+        $user = $request->user();
+
+        if ($user && !$user->has_profile_setup) {
+            return response()->json([
+                'error' => 'profile_incomplete',
+                'message' => 'Please complete your profile setup before proceeding.'
+            ], 403);
         }
 
         return $next($request);

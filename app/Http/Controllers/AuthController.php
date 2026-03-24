@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -18,8 +19,8 @@ class AuthController extends Controller
     {
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth('api')->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        if (!$token = auth('api')->attempt($credentials)) {
+            return ApiResponse::error('Unauthorized', 401);
         }
 
         return $this->respondWithToken($token);
@@ -32,7 +33,7 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth('api')->user());
+        return ApiResponse::success(auth('api')->user());
     }
 
     /**
@@ -44,7 +45,7 @@ class AuthController extends Controller
     {
         auth('api')->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return ApiResponse::success(null, 'Successfully logged out');
     }
 
     /**
@@ -58,17 +59,24 @@ class AuthController extends Controller
     }
 
     /**
-     * Get the token array structure.
+     * Get the token array structure. Updated to include user_id and has_profile_setup 
+     * for redirection to the profile setup page.
      *
      * @param  string  $token
      * @return \Illuminate\Http\JsonResponse
      */
     protected function respondWithToken($token)
     {
-        return response()->json([
+        $user = auth('api')->user();
+
+        return ApiResponse::success([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL(),
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'user' => [
+                'id' => $user->id,
+                'has_profile_setup' => $user->has_profile_setup,
+            ],
         ]);
     }
 
@@ -96,10 +104,9 @@ class AuthController extends Controller
 
         // 3. In production, you would Mail::to($request->email)->send(...)
         // For now, we return it in JSON so you can copy-paste it to Postman
-        return response()->json([
-            'message' => 'OTP generated successfully.',
+        return ApiResponse::success([
             'otp' => $otp, // REMOVE THIS LINE IN PRODUCTION!
-        ]);
+        ], 'OTP generated successfully.');
     }
 
     public function resetPassword(Request $request)
@@ -122,8 +129,8 @@ class AuthController extends Controller
                 ->where('expires_at', '>=', now())
                 ->first();
 
-            if (! $resetData) {
-                return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+            if (!$resetData) {
+                return ApiResponse::error('Invalid or expired OTP.', 422);
             }
 
             // 3. Update the User's password
@@ -136,17 +143,16 @@ class AuthController extends Controller
                 ->where('id', $resetData->id)
                 ->update(['used_at' => now()]);
 
-            return response()->json(['message' => 'Password has been reset successfully.']);
+            return ApiResponse::success(null, 'Password has been reset successfully.');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Catch validation errors specifically (like 422 errors)
-            return response()->json(['message' => 'Validation failed', 'errors' => $e->errors()], 422);
+            return ApiResponse::error('Validation failed', 422, ['errors' => $e->errors()]);
         } catch (\Exception $e) {
             // Catch system errors (500 errors)
-            return response()->json([
-                'message' => 'An error occurred while resetting the password.',
+            return ApiResponse::error('An error occurred while resetting the password.', 500, [
                 'error' => $e->getMessage(),
-            ], 500);
+            ]);
         }
     }
 }

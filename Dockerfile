@@ -2,9 +2,9 @@ FROM composer:2.8 AS vendor
 
 WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --no-scripts
 COPY . .
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 
 FROM php:8.3-cli-alpine
 

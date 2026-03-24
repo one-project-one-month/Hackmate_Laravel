@@ -7,6 +7,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\TechStackController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileSetupController;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
             Route::post('/refresh', [AuthController::class, 'refresh']);
             Route::post('/logout', [AuthController::class, 'logout']);
+            Route::post('/profile/setup', [ProfileSetupController::class, 'store']);
         });
     });
 
@@ -37,6 +39,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/feed/metric/dislike', [FeedController::class, 'metricDislike']);
 
         Route::post('/projects', [ProjectController::class, 'store']);
+
         Route::get('/projects/own', [ProjectController::class, 'own']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
@@ -47,6 +50,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/join-requests/{id}/approve', [RequestController::class, 'approve']);
         Route::post('/join-requests/{id}/disapprove', [RequestController::class, 'disapprove']);
         Route::get('/projects/{projectId}/join-requests', [RequestController::class, 'list']);
+        Route::get('/projects/{project_id}/requests', [ProjectController::class, 'listJoinRequests']);
     });
 
     Route::prefix('user')->group(function () {

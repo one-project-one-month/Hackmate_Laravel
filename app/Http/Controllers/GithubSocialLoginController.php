@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Socialite;
@@ -18,34 +19,38 @@ class GithubSocialLoginController extends Controller
             ->redirect()
             ->getTargetUrl();
 
-        return response()->json(['url' => $url]);
+        return ApiResponse::success(['url' => $url]);
     }
 
+    /**
+     * Updated to include user's id and user's has_profile_setup flag 
+     * for redirection to the profile setup page.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
     public function callback(Request $request)
     {
         try {
             $gh = Socialite::driver('github')->stateless()->user();
         } catch (Throwable $exception) {
-            return response()->json([
-                'error' => 'github_auth_failed',
-                'message' => 'GitHub login failed or was canceled.',
-            ], 422);
+            return ApiResponse::error('GitHub login failed or was canceled.', 422, [
+                'code' => 'github_auth_failed',
+            ]);
         }
 
         $githubId = $gh->getId();
         if (! $githubId) {
-            return response()->json([
-                'error' => 'github_profile_incomplete',
-                'message' => 'GitHub did not return a valid account identifier.',
-            ], 422);
+            return ApiResponse::error('GitHub did not return a valid account identifier.', 422, [
+                'code' => 'github_profile_incomplete',
+            ]);
         }
 
         $githubToken = $gh->token;
         if (! $githubToken) {
-            return response()->json([
-                'error' => 'github_token_missing',
-                'message' => 'GitHub did not return an access token.',
-            ], 422);
+            return ApiResponse::error('GitHub did not return an access token.', 422, [
+                'code' => 'github_token_missing',
+            ]);
         }
 
         $githubId = (int) $githubId;
@@ -77,12 +82,15 @@ class GithubSocialLoginController extends Controller
 
         $frontendCallback = rtrim(env('FRONTEND_GITHUB_CALLBACK_URL', ''), '/');
         if (! $frontendCallback) {
-            return response()->json([
-                'error' => 'frontend_callback_not_configured',
-                'message' => 'Set FRONTEND_GITHUB_CALLBACK_URL in .env.',
-            ], 500);
+            return ApiResponse::error('Set FRONTEND_GITHUB_CALLBACK_URL in .env.', 500, [
+                'code' => 'frontend_callback_not_configured',
+            ]);
         }
 
-        return redirect()->away($frontendCallback.'?token='.$token);
+        return redirect()->away($frontendCallback . '?' . http_build_query([
+            'token' => $token,
+            'user_id' => $user->id,
+            'has_profile_setup' => $user->has_profile_setup,
+        ]));
     }
 }
