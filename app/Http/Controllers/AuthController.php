@@ -10,6 +10,29 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'nullable|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            $user = User::create([
+                'name' => $validated['name'] ?? null,
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+            ]);
+
+            $token = auth('api')->login($user);
+
+            return $this->respondWithToken($token);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return ApiResponse::error('Validation failed', 422, ['errors' => $e->errors()]);
+        }
+    }
+
     /**
      * Get a JWT via given credentials.
      *

@@ -28,7 +28,7 @@ class UserController extends Controller
             'bio' => 'nullable|string|max:500',
             'github_username' => 'nullable|string|max:100',
             'tech_stacks' => 'nullable|array',
-            'tech_stacks.*' => 'exists:tech_stacks,id',
+            'tech_stacks.*' => 'string|max:100|distinct',
         ]);
 
         $user->update([
@@ -36,12 +36,9 @@ class UserController extends Controller
             'preferred_role' => $request->preferred_role ?? $user->preferred_role,
             'bio' => $request->bio,
             'github_username' => $request->github_username,
+            'tech_stacks' => $request->has('tech_stacks') ? $request->tech_stacks : $user->tech_stacks,
         ]);
 
-        if ($request->has('tech_stacks')) {
-            $user->techStacks()->sync($request->tech_stacks);
-        }
-
-        return ApiResponse::success($user->load('techStacks'), 'Profile updated successfully');
+        return ApiResponse::success($user->fresh(), 'Profile updated successfully');
     }
 }
