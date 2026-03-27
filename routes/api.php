@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:api')->group(function () {
+        Route::put('/users/me', [UserController::class, 'updateSelfUserInfo']);
 
         Route::get('/feed', [FeedController::class, 'feed']);
         Route::post('/feed/metric/like', [FeedController::class, 'metricLike']);

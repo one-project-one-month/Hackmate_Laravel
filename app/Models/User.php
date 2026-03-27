@@ -4,7 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -30,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'github_id',
         'github_token',
         'has_profile_setup',
+        'tech_stacks',
     ];
 
     /**
@@ -62,12 +62,8 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'has_profile_setup' => 'boolean',
+            'tech_stacks' => 'array',
         ];
-    }
-
-    public function techStacks(): BelongsToMany
-    {
-        return $this->belongsToMany(TechStack::class, 'user_tech_stacks', 'user_id', 'tech_stack_id');
     }
 
     public function projects(): HasMany

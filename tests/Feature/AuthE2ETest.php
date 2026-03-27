@@ -37,6 +37,54 @@ it('logs in and returns a bearer token payload', function (): void {
     expect($response->json('content.token_type'))->toBe('bearer');
 });
 
+it('registers a user and returns a bearer token payload', function (): void {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Register User',
+        'email' => 'register@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonStructure([
+            'success',
+            'message',
+            'content' => [
+                'access_token',
+                'token_type',
+                'expires_in',
+            ],
+            'status',
+        ]);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'register@example.com',
+        'name' => 'Register User',
+    ]);
+
+    expect($response->json('content.token_type'))->toBe('bearer');
+});
+
+it('rejects duplicate email during registration', function (): void {
+    User::factory()->create([
+        'email' => 'register@example.com',
+    ]);
+
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'Register User',
+        'email' => 'register@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJson([
+            'success' => false,
+            'message' => 'Validation failed',
+            'status' => 422,
+        ]);
+});
+
 it('rejects invalid credentials', function (): void {
     User::factory()->create([
         'email' => 'auth@example.com',
