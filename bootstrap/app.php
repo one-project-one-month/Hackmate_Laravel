@@ -1,11 +1,11 @@
 <?php
 
+use App\Support\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use App\Support\ApiResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
