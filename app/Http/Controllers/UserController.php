@@ -41,7 +41,7 @@ class UserController extends Controller
             'bio' => $user->bio,
             'github_username' => $user->github_username,
             'profile_image' => $user->profile_image,
-            'profile_image_url' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+            'profile_image_url' => $user->profile_image ? asset('storage/'.$user->profile_image) : null,
             'has_profile_setup' => $user->has_profile_setup,
             'tech_stacks' => $user->techStacks,
             'metrics' => [

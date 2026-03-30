@@ -42,7 +42,7 @@ class AuthController extends Controller
     {
         $credentials = request(['email', 'password']);
 
-        if (!$token = auth('api')->attempt($credentials)) {
+        if (! $token = auth('api')->attempt($credentials)) {
             return ApiResponse::error('Unauthorized', 401);
         }
 
@@ -82,7 +82,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Get the token array structure. Updated to include user_id and has_profile_setup 
+     * Get the token array structure. Updated to include user_id and has_profile_setup
      * for redirection to the profile setup page.
      *
      * @param  string  $token
@@ -152,7 +152,7 @@ class AuthController extends Controller
                 ->where('expires_at', '>=', now())
                 ->first();
 
-            if (!$resetData) {
+            if (! $resetData) {
                 return ApiResponse::error('Invalid or expired OTP.', 422);
             }
 

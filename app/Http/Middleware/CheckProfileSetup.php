@@ -17,10 +17,10 @@ class CheckProfileSetup
     {
         $user = $request->user();
 
-        if ($user && !$user->has_profile_setup) {
+        if ($user && ! $user->has_profile_setup) {
             return response()->json([
                 'error' => 'profile_incomplete',
-                'message' => 'Please complete your profile setup before proceeding.'
+                'message' => 'Please complete your profile setup before proceeding.',
             ], 403);
         }
 

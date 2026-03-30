@@ -39,7 +39,7 @@ class ProfileSetupController extends Controller
             'message' => 'Profile setup complete',
             'user' => $user->load('techStacks'),
             'profile_image_url' => $user->profile_image
-                ? asset('storage/' . $user->profile_image)
+                ? asset('storage/'.$user->profile_image)
                 : null,
         ]);
     }

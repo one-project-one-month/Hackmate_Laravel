@@ -3,11 +3,11 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\GithubSocialLoginController;
+use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\TechStackController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProfileSetupController;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Support\Facades\Route;
 
