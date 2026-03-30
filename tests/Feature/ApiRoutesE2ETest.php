@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Project;
 use App\Models\TechStack;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -477,4 +478,41 @@ it('fails when one tech stack id is invalid in a mixed payload', function (): vo
         ])
         ->assertStatus(422)
         ->assertJsonValidationErrors('tech_stack.1');
+});
+
+it('sends a join request for a project by project id', function (): void {
+    $owner = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $requester = User::factory()->create([
+        'password' => bcrypt('password123'),
+        'email' => 'requester@example.com',
+    ]);
+
+    $project = Project::factory()->create([
+        'created_by_user_id' => $owner->id,
+    ]);
+
+    $token = loginToken($requester);
+
+    $response = $this->withToken($token)
+        ->postJson("/api/v1/requests/send/{$project->id}")
+        ->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'Join request sent successfully.',
+            'content' => [
+                'project_id' => $project->id,
+                'user_id' => $requester->id,
+                'status' => 'pending',
+            ],
+        ]);
+
+    $this->assertDatabaseHas('join_requests', [
+        'id' => $response->json('content.id'),
+        'project_id' => $project->id,
+        'user_id' => $requester->id,
+        'status' => 'pending',
+    ]);
 });

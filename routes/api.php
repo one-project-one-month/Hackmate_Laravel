@@ -17,8 +17,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/github/callback', [GithubSocialLoginController::class, 'callback']);
     Route::get('/tech-stack', [TechStackController::class, 'index']);
 
-    Route::get('/users/{id}', [UserController::class, 'getUserById']);
-
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
@@ -34,6 +32,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:api')->group(function () {
+        Route::get('/users/me', [UserController::class, 'getSelfProfile']);
         Route::put('/users/me', [UserController::class, 'updateSelfUserInfo']);
 
         Route::get('/feed', [FeedController::class, 'feed']);
@@ -49,9 +48,12 @@ Route::prefix('v1')->group(function () {
         // Replace index with FeedController delegation
         Route::get('/projects', [ProjectController::class, 'index']);
 
+        Route::post('/requests/send/{project_id}', [RequestController::class, 'send']);
         Route::post('/join-requests/{id}/approve', [RequestController::class, 'approve']);
         Route::post('/join-requests/{id}/disapprove', [RequestController::class, 'disapprove']);
         Route::get('/projects/{projectId}/join-requests', [RequestController::class, 'list']);
         Route::get('/projects/{project_id}/requests', [ProjectController::class, 'listJoinRequests']);
     });
+
+    Route::get('/users/{id}', [UserController::class, 'getUserById']);
 });

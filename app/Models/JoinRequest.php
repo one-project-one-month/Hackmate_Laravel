@@ -37,6 +37,7 @@ class JoinRequest extends Model
         if ($this->checkPermission($userId)) {
             $this->status = 'approved';
             $this->save();
+            $this->project?->users()->syncWithoutDetaching([$this->user_id]);
 
             return true;
         }
@@ -47,7 +48,7 @@ class JoinRequest extends Model
     public function disapprove($userId)
     {
         if ($this->checkPermission($userId)) {
-            $this->status = 'disapproved';
+            $this->status = 'disproved';
             $this->save();
 
             return true;
