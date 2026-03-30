@@ -76,19 +76,14 @@ class UserController extends Controller
             'tech_stacks.*' => 'string|max:100|distinct',
         ]);
 
-        $updateData = $request->only(['name', 'preferred_role', 'bio', 'github_username']);
-        
-        $user->update(array_filter($updateData));
-
-        if ($request->has('tech_stacks')) {
-            $user->techStacks()->sync($request->tech_stacks);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-            'content' => $user->load('techStacks'),
-            'status' => 200
+        $user->update([
+            'name' => $request->has('name') ? $request->name : $user->name,
+            'preferred_role' => $request->has('preferred_role') ? $request->preferred_role : $user->preferred_role,
+            'bio' => $request->has('bio') ? $request->bio : $user->bio,
+            'github_username' => $request->has('github_username') ? $request->github_username : $user->github_username,
+            'tech_stacks' => $request->has('tech_stacks') ? $request->tech_stacks : $user->tech_stacks,
         ]);
+
+        return ApiResponse::success($user->fresh(), 'Profile updated successfully');
     }
 }
