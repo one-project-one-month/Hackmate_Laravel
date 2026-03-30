@@ -31,6 +31,7 @@ class User extends Authenticatable implements JWTSubject
         'github_token',
         'profile_image',
         'has_profile_setup',
+        'tech_stacks',
     ];
 
     /**
@@ -63,12 +64,8 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'has_profile_setup' => 'boolean',
+            'tech_stacks' => 'array',
         ];
-    }
-
-    public function techStacks(): BelongsToMany
-    {
-        return $this->belongsToMany(TechStack::class, 'user_tech_stacks', 'user_id', 'tech_stack_id');
     }
 
     public function projects(): HasMany
@@ -76,14 +73,22 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Project::class, 'created_by_user_id');
     }
 
+    public function joinRequests(): HasMany
+    {
+        return $this->hasMany(JoinRequest::class, 'user_id');
+    }
+
     public function passwordResetOtps(): HasMany
     {
         return $this->hasMany(PasswordResetOtp::class, 'user_id');
     }
 
+    public function techStacks(): BelongsToMany
+    {
+        return $this->belongsToMany(TechStack::class, 'user_tech_stacks', 'user_id', 'tech_stack_id');
+    }
 
-
-    public function joinedProjects()
+    public function joinedProjects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_user', 'user_id', 'project_id');
     }

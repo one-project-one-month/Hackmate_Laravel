@@ -8,6 +8,51 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function getSelfProfile(Request $request)
+    {
+        $authUserId = $request->user()->id;
+
+        $user = User::query()
+            ->with(['techStacks:id,name,category', 'joinedProjects:id,title,created_by_user_id', 'projects:id,title,created_by_user_id'])
+            ->withCount([
+                'projects as created_projects_count',
+                'joinedProjects as joined_projects_count',
+            ])
+            ->selectSub(function ($query) {
+                $query->from('join_requests')
+                    ->join('projects', 'projects.id', '=', 'join_requests.project_id')
+                    ->selectRaw('count(*)')
+                    ->whereColumn('projects.created_by_user_id', 'users.id')
+                    ->where('join_requests.status', 'pending');
+            }, 'pending_join_requests_count')
+            ->selectSub(function ($query) {
+                $query->from('join_requests')
+                    ->selectRaw('count(*)')
+                    ->whereColumn('join_requests.user_id', 'users.id')
+                    ->where('join_requests.status', 'approved');
+            }, 'approved_join_requests_count')
+            ->findOrFail($authUserId);
+
+        return ApiResponse::success([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'preferred_role' => $user->preferred_role,
+            'bio' => $user->bio,
+            'github_username' => $user->github_username,
+            'profile_image' => $user->profile_image,
+            'profile_image_url' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+            'has_profile_setup' => $user->has_profile_setup,
+            'tech_stacks' => $user->techStacks,
+            'metrics' => [
+                'created_projects_count' => $user->created_projects_count,
+                'joined_projects_count' => $user->joined_projects_count,
+                'pending_join_requests_count' => $user->pending_join_requests_count,
+                'approved_join_requests_count' => $user->approved_join_requests_count,
+            ],
+        ]);
+    }
+
     public function getUserById(Request $request, $id)
     {
         $user = User::find($id);
@@ -28,7 +73,7 @@ class UserController extends Controller
             'bio' => 'nullable|string|max:500',
             'github_username' => 'nullable|string|max:100',
             'tech_stacks' => 'nullable|array',
-            'tech_stacks.*' => 'exists:tech_stacks,id',
+            'tech_stacks.*' => 'string|max:100|distinct',
         ]);
 
         $updateData = $request->only(['name', 'preferred_role', 'bio', 'github_username']);
