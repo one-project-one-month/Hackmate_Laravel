@@ -6,7 +6,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --no-
 COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 
 WORKDIR /var/www/html
 
